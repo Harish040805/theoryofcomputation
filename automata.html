@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Automata Graph Creator</title>
+  <style>
+    :root {
+      --main-red: #B22222;
+      --hover-red: #991111;
+      --dark-red: #8B0A0A;
+      --light-red: #C04040;
+    }
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #000;
+      color: #fff;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    h1, h2 {
+      color: #fff;
+      text-align: center;
+      margin: 1rem 0;
+    }
+.layout {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 20px;
+  gap: 20px;
+  flex: 1 1 auto;
+  min-height: 600px;
+  max-height: 90vh;
+}
+
+#graph-container {
+  border: 1px solid var(--main-red);
+  background-color: #111;
+  box-shadow: 0 0 10px rgba(178, 34, 34, 0.5);
+  min-height: 580px;
+  height: 88%;
+  max-height: 88vh;
+  overflow: hidden;
+  position: relative;
+}
+    #graph-container svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .side-panel {
+      flex: 1 1 25%;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-sizing: border-box;
+    }
+    #states-section, #controls-section {
+      padding: 20px;
+      border: 1px solid var(--main-red);
+      border-radius: 10px;
+      background-color: #111;
+      box-shadow: 0 0 10px rgba(178, 34, 34, 0.5);
+    }
+    input[type="text"], textarea {
+      width: 90%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid var(--main-red);
+      border-radius: 5px;
+      background-color: #333;
+      color: #fff;
+      font-size: 1rem;
+      box-sizing: border-box;
+    }
+    textarea {
+      resize: vertical;
+      min-height: 60px;
+      max-height: 150px;
+    }
+    button {
+      padding: 10px;
+      background-color: var(--main-red);
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: var(--hover-red);
+    }
+    #data-input #add-state-btn {
+      width: 100%;
+    }
+    #mode-selector {
+      padding: 20px;
+      border: 1px solid var(--main-red);
+      border-radius: 10px;
+      background-color: #111;
+      box-shadow: 0 0 10px rgba(178, 34, 34, 0.5);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+    #mode-selector > div {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 15px;
+    }
+    #mode-selector button {
+      flex: 1 1 30%;
+      min-width: 80px;
+      white-space: nowrap;
+    }
+    #reset-btn {
+      width: 80%;
+	  margin: 0 auto;
+    }
+    .radio-group label {
+      display: block;
+      margin-bottom: 10px;
+      cursor: pointer;
+      color: #fff;
+      font-size: 1rem;
+    }
+    .node {
+      stroke: #fff;
+    }
+    .node.initial {
+      fill: var(--light-red);
+      stroke-width: 1;
+    }
+    .node.final {
+      fill: var(--dark-red);
+      stroke-width: 4;
+    }
+    .node.normal {
+      fill: var(--main-red);
+      stroke-width: 1;
+    }
+    .link {
+      stroke: var(--main-red);
+      stroke-width: 1px;
+    }
+    .link-label, .node-label {
+      fill: #fff;
+      font-size: 14px;
+    }
+    #states-container {
+      max-height: 120px;
+      overflow-y: auto;
+      border: 1px solid var(--main-red);
+      padding: 5px;
+      border-radius: 5px;
+      background: #222;
+      font-size: 0.9rem;
+    }
+    .error {
+      color: red;
+      font-size: 0.8rem;
+      margin-bottom: 10px;
+    }
+    @media (max-width: 900px) {
+      .layout {
+        flex-direction: column;
+        min-height: auto;
+      }
+      #graph-container, .side-panel {
+        flex: none;
+        width: 100%;
+        max-height: none;
+        min-height: 300px;
+      }
+      .side-panel {
+        max-height: none;
+        overflow: visible;
+      }
+      #mode-selector > div {
+        flex-direction: column;
+      }
+      #mode-selector button {
+        flex: none;
+        width: 100%;
+        min-width: auto;
+      }
+    }
+    @media (max-width: 400px) {
+      button, input[type="text"], textarea {
+        font-size: 0.9rem;
+      }
+      .radio-group label {
+        font-size: 0.9rem;
+      }
+    }
+	@media (max-width: 768px) {
+  #ai-prompt, input[type="text"], textarea, button {
+    font-size: 1rem;
+    width: 100%;
+  }
+	#initial-state, #final-state {
+  width: 40%; 
+  display: inline-block;
+  margin-right: 10px; 
+}
+  </style>
+</head>
+<body>
+<br><br>
+
+<button id="info-btn" title="Info">i</button>
+<div id="iframe-overlay" style="display: none;">
+  <div id="iframe-wrapper">
+    <button id="close-iframe-btn" title="Close">×</button>
+    <iframe srcdoc="
+      <html>
+        <head>
+          <style>
+            body { 
+				background: #111; 
+				color: white; 
+				font-family: Arial, sans-serif; 
+				padding: 20px; 
+			}
+            h1, h2 { 
+				color: #fff; 
+			}
+			h1 {font-size: 30px;}
+			h2 {font-size: 22px;}
+            p, ul, li { 
+				font-size: 16px; line-height: 1.5; 
+			}
+            .section { 
+				margin-bottom: 25px; 
+			}
+          </style>
+        </head>
+        <body>
+ <section>
+ <h1>Automata</h1>
+ <h2>What is Automata?</h2>
+ <p>Automata is the study of abstract machine (called automata) and the computational problems they can solve. Automata are mathematical models of computation that process input strings
+ and determine if the input is accepted based on their internal state transitions.
+ <br><br>
+ They are fundamental in computer science for designing compilers, pasing and understanding computation limits.</p>
+    <h2>Types of Automata</h2>
+    <ul>
+      <li><strong>DFA (Deterministic Finite Automaton):</strong>
+        <ul>
+          <li>Each state has exactly one transition per input symbol. </li>
+		  <li>The machine's behaviour is fully determined by the current state and input.</li>
+          <li>Meaning it never has multiple options for the same input symbol.</li>
+        </ul>
+      </li>
+      <li><strong>NFA (Non-Deterministic Finite Automaton):</strong>
+        <ul>
+          <li>States can have zero, one or multiple transitions for a same input symbol.</li>
+		  <li>The machine can be in multiple states simultaneously.</li>
+          <li>Allows multiple possible next states or none.</li>
+        </ul>
+      </li>
+      <li><strong>PDA (Pushdown Automata):</strong>
+        <ul>
+          <li>Extends automata with a stack for memory.</li>
+          <li>Useful for recognizing context-free languages.</li>
+        </ul>
+      </li>
+      <li><strong>Turing Machine:</strong>
+        <ul>
+          <li>The most powerful automata or model.</li>
+          <li>Can simulate any computation algorithmically.</li>
+        </ul>
+      </li>
+    </ul>
+    <p>This gives users a basic taxonomy of automata types relevant in theory and practice.</p>
+  </section>
+
+  <section>
+    <h2>How to Use This Tool</h2>
+    <ol>
+      <li><strong>Add states:</strong><br />Use the input fields to enter states like <code>q0</code>, <code>q1</code>, etc.</li>
+      <li><strong>Set initial/final states:</strong><br />Specify which state the automaton starts from and which states are accepting/final.</li>
+      <li><strong>Select DFA/NFA:</strong><br />Choose the automaton type via radio buttons, which affects the transitions.</li>
+      <li><strong>View graph:</strong><br />The automaton is rendered as a graph with nodes (states) and arrows (transitions).</li>
+      <li><strong>Reset if needed:</strong><br />Clear all inputs and the graph to start fresh.</li>
+    </ol>
+  </section>
+        </body>
+      </html>
+    "></iframe>
+  </div>
+</div>
+<style>
+  #info-btn {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    width: 40px;
+    height: 40px;
+    background-color: blue;
+    border: 3px solid white;
+    border-radius: 50%;
+    color: white;
+    font-weight: bold;
+    font-size: 17px;
+    cursor: pointer;
+    z-index: 9999;
+  }
+  #iframe-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    background-color: rgba(0,0,0,0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9998;
+ 1;
+  #iframe-wrapper {
+    position: relative;
+    width: 90%;
+    height: 80%;
+  }
+  #iframe-wrapper iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 0 10px #fff;
+  }
+  #close-iframe-btn {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    background-color: #B22222;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 20px;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    z-index: 10000;
+  }
+</style>
+<script>
+  const infoBtn = document.getElementById('info-btn');
+  const iframeOverlay = document.getElementById('iframe-overlay');
+  const closeBtn = document.getElementById('close-iframe-btn');
+
+  infoBtn.addEventListener('click', () => {
+    iframeOverlay.style.display = 'flex';
+  });
+
+  closeBtn.addEventListener('click', () => {
+    iframeOverlay.style.display = 'none';
+  });
+</script>
+  <div class="layout">
+  <div style="flex: 1 1 70%;">
+ 	<div style="text-align: center; margin-top: 20px;">
+	  <h1>Automata Graph Creator</h1>
+    </div> 
+    <div id="graph-container"></div>
+	<br><br><br>
+  </div>
+  <div class="side-panel" style="flex: 1 1 25%;">
+      <div id="mode-selector">
+        <h2>Select Input Mode</h2>
+        <div>
+          <button id="data-btn">Data</button>
+          <button id="equation-btn">Equation</button>
+          <button id="text-btn">Text</button>
+		  <button id="ask-ai">Ask AI</button>
+<div id="ai-input" style="display: none;">
+  <p>Ask AI to build an automaton:</p>
+  <input id="ai-prompt" type="text" placeholder="Example: Accepts strings ending with 'ab'" />
+  <button id="submit-ai-btn">Generate</button>
+  <div id="ai-response" style="margin-top: 10px; font-size: 0.9rem; color: lightgreen;"></div>
+</div>
+
+        </div>
+        <div id="input-modes">
+          <div id="data-input" style="display: none;">
+            <input id="state" type="text" placeholder="Enter state (e.g., q0)">
+            <button id="add-state-btn">Add State</button>
+            <div id="state-error" class="error"></div>
+            <br><br>
+<input id="initial-state" type="text" placeholder="Initial state">
+<input id="final-state" type="text" placeholder="Final state(s, comma-separated)">
+                        <div id="initial-state-error" class="error"></div>
+						<div id="final-state-error" class="error"></div>
+            <div id="states-container"></div>
+			<br>
+			      <button id="reset-btn" style="width: 30%;">Reset</button>
+          </div>
+<div id="equation-input" style="display: none;">
+  <p>Enter equation:</p>
+  <textarea id="equation-textarea" placeholder="q0 + a = q1"></textarea>
+  <button id="solve-equation-btn">Solve</button>
+  <div id="equation-error" class="error"></div>
+</div>
+
+<div id="text-input" style="display: none;">
+  <p>Enter plain text:</p>
+  <input id="text-input-field" type="text" placeholder="Type something...">
+  <button id="solve-text-btn">Solve</button>
+  <div id="text-error" class="error"></div>
+</div>
+        </div>
+      </div>
+      <div id="controls-section">
+        <h2>Graph Controls</h2>
+        <div class="radio-group">
+          <label><input type="radio" name="type" value="dfa" checked> Deterministic (DFA)</label>
+          <label><input type="radio" name="type" value="nfa"> Non-Deterministic (NFA)</label>
+        </div>
+      </div>
+    </div>
+	</div>
+  </div>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script>
+const buttons = {
+  data: document.getElementById('data-btn'),
+  equation: document.getElementById('equation-btn'),
+  text: document.getElementById('text-btn'),
+  ai: document.getElementById('ask-ai') 
+};
+
+const sections = {
+  data: document.getElementById('data-input'),
+  equation: document.getElementById('equation-input'),
+  text: document.getElementById('text-input'),
+  ai: document.getElementById('ai-input') 
+};
+
+function activateMode(mode) {
+  for (let key in buttons) {
+    buttons[key].style.backgroundColor = key === mode ? 'var(--hover-red)' : 'var(--main-red)';
+    sections[key].style.display = key === mode ? 'block' : 'none';
+  }
+}
+
+buttons.data.addEventListener('click', () => activateMode('data'));
+buttons.equation.addEventListener('click', () => activateMode('equation'));
+buttons.text.addEventListener('click', () => activateMode('text'));
+buttons.ai.addEventListener('click', () => activateMode('ai'));
+activateMode('data');
+
+let states = [];
+
+document.getElementById('add-state-btn').addEventListener('click', () => {
+  const state = document.getElementById('state').value.trim();
+  const stateError = document.getElementById('state-error');
+  if (state) {
+    if (!states.includes(state)) {
+      states.push(state);
+      document.getElementById('states-container').innerHTML += `<div>${state}</div>`;
+      document.getElementById('state').value = '';
+      stateError.textContent = '';
+      regenerateGraph();
+    } else {
+      stateError.textContent = 'State already exists!';
+    }
+  } else {
+    stateError.textContent = 'Please enter a state!';
+  }
+});
+
+document.getElementById('reset-btn').addEventListener('click', () => {
+  states = [];
+  document.getElementById('state').value = '';
+  document.getElementById('initial-state').value = '';
+  document.getElementById('final-state').value = '';
+  document.getElementById('states-container').innerHTML = '';
+  document.getElementById('graph-container').innerHTML = '';
+  document.getElementById('state-error').textContent = '';
+  document.getElementById('initial-state-error').textContent = '';
+  document.getElementById('final-state-error').textContent = '';
+});
+
+document.getElementById('initial-state').addEventListener('input', () => {
+  const initialState = document.getElementById('initial-state').value.trim();
+  const initialStateError = document.getElementById('initial-state-error');
+  if (initialState && !states.includes(initialState)) {
+    initialStateError.textContent = 'Initial state does not exist!';
+  } else {
+    initialStateError.textContent = '';
+  }
+  regenerateGraph();
+});
+
+document.getElementById('final-state').addEventListener('input', () => {
+  const finalStates = document.getElementById('final-state').value.trim().split(',').map(f => f.trim());
+  const finalStateError = document.getElementById('final-state-error');
+  const invalidStates = finalStates.filter(f => f && !states.includes(f));
+  if (invalidStates.length > 0) {
+    finalStateError.textContent = 'Final states do not exist!';
+  } else {
+    finalStateError.textContent = '';
+  }
+  regenerateGraph();
+});
+
+document.querySelectorAll('input[name="type"]').forEach(radio => {
+  radio.addEventListener('change', regenerateGraph);
+});
+
+function regenerateGraph() {
+  const alphabet = ['a', 'b'];
+  const initial = document.getElementById('initial-state').value.trim();
+  const final = document.getElementById('final-state').value.trim().split(',').map(f => f.trim());
+  const isDFA = document.querySelector('input[name="type"]:checked').value === 'dfa';
+
+  if (states.length === 0) {
+    console.error('No states defined');
+    return;
+  }
+
+  if (!initial || !states.includes(initial)) return;
+  for (let f of final) {
+    if (f && !states.includes(f)) return;
+  }
+
+  const transitions = [];
+  states.forEach(from => {
+    alphabet.forEach(symbol => {
+      const toCount = isDFA ? 1 : Math.floor(Math.random() * states.length) + 1;
+      for (let i = 0; i < toCount; i++) {
+        const to = states[Math.floor(Math.random() * states.length)];
+        transitions.push({ from, symbol, to });
+      }
+    });
+  });
+
+  drawGraph(states, transitions, initial, final);
+}
+
+document.getElementById('solve-equation-btn').addEventListener('click', () => {
+  const input = document.getElementById('equation-textarea').value.trim();
+  const error = document.getElementById('equation-error');
+  error.textContent = '';
+  if (!input) {
+    error.textContent = 'Please enter an equation.';
+    return;
+  }
+
+  const lines = input.split('\n');
+  const transitions = [];
+  const stateSet = new Set();
+
+  for (let line of lines) {
+    const match = line.match(/^(\w+)\s*\+\s*(\w+)\s*=\s*(\w+)$/);
+    if (!match) {
+      error.textContent = 'Invalid format. Use: q0 + a = q1';
+      return;
+    }
+    const [_, from, symbol, to] = match;
+    transitions.push({ from, symbol, to });
+    stateSet.add(from);
+    stateSet.add(to);
+  }
+
+  const stateList = [...stateSet];
+  const initial = stateList[0];
+  const final = [stateList[stateList.length - 1]];
+
+  drawGraph(stateList, transitions, initial, final);
+});
+
+document.getElementById('solve-text-btn').addEventListener('click', () => {
+  const input = document.getElementById('text-input-field').value.trim();
+  const error = document.getElementById('text-error');
+  error.textContent = '';
+  if (!input) {
+    error.textContent = 'Please enter some transitions.';
+    return;
+  }
+
+  const entries = input.split(',');
+  const transitions = [];
+  const stateSet = new Set();
+
+  for (let entry of entries) {
+    const parts = entry.trim().split(/\s+/);
+    if (parts.length !== 3) {
+      error.textContent = 'Format: from symbol to';
+      return;
+    }
+    const [from, symbol, to] = parts;
+    transitions.push({ from, symbol, to });
+    stateSet.add(from);
+    stateSet.add(to);
+  }
+
+  const stateList = [...stateSet];
+  const initial = stateList[0];
+  const final = [stateList[stateList.length - 1]];
+
+  drawGraph(stateList, transitions, initial, final);
+});
+
+document.getElementById('submit-ai-btn').addEventListener('click', () => {
+  const prompt = document.getElementById('ai-prompt').value.trim();
+  const responseBox = document.getElementById('ai-response');
+
+  if (!prompt) {
+    responseBox.textContent = 'Please enter a prompt.';
+    return;
+  }
+
+  responseBox.textContent = 'Generating...';
+
+  const mock = {
+    states: ['q0', 'q1', 'q2'],
+    initial: 'q0',
+    final: ['q2'],
+    transitions: [
+      { from: 'q0', symbol: 'a', to: 'q1' },
+      { from: 'q1', symbol: 'b', to: 'q2' },
+      { from: 'q2', symbol: 'a', to: 'q1' }
+    ]
+  };
+
+  drawGraph(mock.states, mock.transitions, mock.initial, mock.final);
+  responseBox.textContent = `Automaton generated with ${mock.states.length} states.`;
+});
+
+function drawGraph(states, transitions, initialState, finalStates) {
+  d3.select('#graph-container').selectAll('*').remove();
+
+  const svg = d3.select('#graph-container')
+    .append('svg')
+    .attr('viewBox', '0 0 800 600')
+    .attr('preserveAspectRatio', 'xMidYMid meet');
+
+  const nodes = states.map(state => ({ id: state }));
+  const links = transitions.map(t => ({
+    source: t.from,
+    target: t.to,
+    label: t.symbol
+  }));
+
+  svg.append('defs')
+    .append('marker')
+    .attr('id', 'arrowhead')
+    .attr('viewBox', '-0 -5 10 10')
+    .attr('refX', 25)
+    .attr('refY', 0)
+    .attr('orient', 'auto')
+    .attr('markerWidth', 13)
+    .attr('markerHeight', 13)
+    .append('path')
+    .attr('d', 'M 0,-5 L 10,0 L 0,5')
+    .attr('fill', '#8B0A0A');
+
+  svg.append('defs')
+    .append('marker')
+    .attr('id', 'startArrow')
+    .attr('viewBox', '-5 -5 10 10')
+    .attr('refX', 10)
+    .attr('refY', 0)
+    .attr('markerWidth', 10)
+    .attr('markerHeight', 10)
+    .attr('orient', 'auto')
+    .append('path')
+    .attr('d', 'M -5,-5 L 5,0 L -5,5')
+    .attr('fill', '#0f0');
+
+  const simulation = d3.forceSimulation(nodes)
+    .force('charge', d3.forceManyBody().strength(-300))
+    .force('link', d3.forceLink(links).id(d => d.id).distance(150))
+    .force('center', d3.forceCenter(400, 300));
+
+  const link = svg.selectAll('.link')
+    .data(links)
+    .enter()
+    .append('line')
+    .attr('class', 'link')
+    .attr('marker-end', 'url(#arrowhead)');
+
+  const node = svg.selectAll('.node')
+    .data(nodes)
+    .enter()
+    .append('circle')
+    .attr('class', d => finalStates.includes(d.id) ? 'node final' : 'node')
+    .attr('r', 20);
+
+  const nodeLabel = svg.selectAll('.node-label')
+    .data(nodes)
+    .enter()
+    .append('text')
+    .attr('class', 'node-label')
+    .text(d => d.id)
+    .attr('text-anchor', 'middle')
+    .attr('dy', '-1.2em')
+    .attr('fill', '#fff')
+    .style('pointer-events', 'none')
+    .style('font-weight', 'bold');
+
+  const linkLabel = svg.selectAll('.link-label')
+    .data(links)
+    .enter()
+    .append('text')
+    .text(d => d.label)
+    .attr('class', 'link-label')
+    .attr('text-anchor', 'middle')
+    .attr('font-size', '12px')
+    .attr('fill', '#fff');
+
+  const startLine = svg.append('line').attr('class', 'start-arrow');
+
+  simulation.on('tick', () => {
+    link
+      .attr('x1', d => d.source.x)
+      .attr('y1', d => d.source.y)
+      .attr('x2', d => d.target.x)
+      .attr('y2', d => d.target.y);
+
+    node
+      .attr('cx', d => d.x)
+      .attr('cy', d => d.y);
+
+    nodeLabel
+      .attr('x', d => d.x)
+      .attr('y', d => d.y - 25);
+
+    linkLabel
+      .attr('x', d => (d.source.x + d.target.x) / 2)
+      .attr('y', d => (d.source.y + d.target.y) / 2);
+
+    const start = nodes.find(n => n.id === initialState);
+    if (start) {
+      startLine
+        .attr('x1', start.x - 50)
+        .attr('y1', start.y)
+        .attr('x2', start.x - 22)
+        .attr('y2', start.y)
+        .attr('stroke', '#0f0')
+        .attr('stroke-width', 2)
+        .attr('marker-end', 'url(#startArrow)');
+    }
+  });
+}
+
+function saveAutomaton() {
+  const data = {
+    states: states,
+    initial: document.getElementById('initial-state').value.trim(),
+    final: document.getElementById('final-state').value.trim().split(',').map(f => f.trim()),
+    transitions: transitions
+  };
+  const json = JSON.stringify(data);
+  const blob = new Blob([json], {type: 'application/json'});
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'automaton.json';
+  link.click();
+}
+
+function loadAutomaton() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'application/json';
+  input.onchange = () => {
+    const file = input.files[0];
+    const reader = new FileReader();
+    reader.onload = () => {
+      const data = JSON.parse(reader.result);
+      states = data.states;
+      document.getElementById('initial-state').value = data.initial;
+      document.getElementById('final-state').value = data.final.join(',');
+      transitions = data.transitions;
+      regenerateGraph();
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+</script>
+</body>
+</html>
