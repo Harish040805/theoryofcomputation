@@ -70,3 +70,7 @@ footer {
     text-align: center;
     clear: both;
 }
+
+#simulator{
+    align-items : center;
+}
