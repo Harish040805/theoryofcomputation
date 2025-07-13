@@ -94,7 +94,7 @@
       width: 100%;
     }
 #add-state-btn {
-   width: 50%;
+   width: 45%;
 }
     #mode-selector {
       padding: 20px;
@@ -120,7 +120,7 @@
       white-space: nowrap;
     }
     #reset-btn {
-      width: 80%;
+      width: 45%;
 	  margin: 0 auto;
     }
     .radio-group label {
