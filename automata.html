@@ -51,7 +51,7 @@
   <label for="alphabet">Alphabet (comma separated):</label>
   <input type="text" id="alphabet" placeholder="e.g. a,b,c" />
 </div>
-<div id="controls-section" style="margin-top: 10px;"></div>
+<div id="data-controls-section" style="margin-top: 10px;"></div>
           <div id="alphabet-error" class="error"></div>
           <br>
 
@@ -83,8 +83,11 @@
 
       <div id="controls-section">
         <h2>Graph Controls</h2>
+        <fieldset style="border: 1px solid #555; padding: 10px; border-radius: 5px;">
+        <legend>Automaton Type</legend>
         <label><input type="radio" name="type" value="dfa" checked> Deterministic (DFA)</label>
         <label><input type="radio" name="type" value="nfa"> Non-Deterministic (NFA)</label>
+        </fieldset>
       </div>
     </div>
   </div>
