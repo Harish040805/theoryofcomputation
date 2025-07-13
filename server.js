@@ -1,44 +1,41 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const fetch = require('node-fetch');
+const { OpenAI } = require('openai');
 
 const app = express();
+const port = process.env.PORT || 3000;
+
+const openai = new OpenAI({
+  apiKey: 'YOUR_OPENAI_API_KEY', // 🔁 Replace this with your real API key
+});
+
 app.use(cors());
 app.use(bodyParser.json());
 
-const PORT = 3000;
-
 app.post('/api/generate-automaton', async (req, res) => {
-  const prompt = req.body.prompt;
+  const { prompt } = req.body;
+  if (!prompt) return res.status(400).json({ error: 'No prompt provided' });
 
   try {
-    const openaiRes = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer YOUR_OPENAI_API_KEY`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: 'gpt-4',
-        messages: [
-          { role: 'system', content: 'You are an automata generator.' },
-          { role: 'user', content: `Generate a DFA or NFA for: ${prompt}. Return states, transitions, initialState, and finalStates in JSON format.` }
-        ]
-      })
+    const chat = await openai.chat.completions.create({
+      model: 'gpt-4',
+      messages: [
+        { role: 'system', content: 'You are an automata expert that generates valid automaton data structures for DFA/NFA based on a user prompt. Respond only with a JSON object like { states: [...], transitions: [...], initialState: "...", finalStates: [...] }' },
+        { role: 'user', content: prompt }
+      ],
+      temperature: 0.2,
     });
 
-    const json = await openaiRes.json();
-    const text = json.choices[0].message.content;
+    const reply = chat.choices[0].message.content;
+    const data = JSON.parse(reply); // Make sure AI returns only valid JSON
 
-    const automaton = JSON.parse(text); // assumes OpenAI returns a clean JSON object
-    res.json(automaton);
+    res.json(data);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to generate automaton.' });
+    res.status(500).json({ error: err.message || 'API error' });
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Server listening at http://localhost:${PORT}`);
+app.listen(port, () => {
+  console.log(`Server running at http://localhost:${port}`);
 });
