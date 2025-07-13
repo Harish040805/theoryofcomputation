@@ -1,22 +1,45 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Automata Simulator</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Theory of Computation Simulator</title>
   <style>
+    :root {
+      --main-red: #B22222;
+      --hover-red: #991111;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #000;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    main {
+      text-align: center;
+    }
+    h2 {
+      font-size: 2rem;
+      margin-bottom: 20px;
+    }
     a.button {
       display: inline-block;
-      padding: 10px 20px;
-      background-color: #B22222;
+      padding: 12px 24px;
+      background-color: var(--main-red);
       color: white;
       text-decoration: none;
       border-radius: 5px;
+      font-size: 1rem;
       font-weight: bold;
+      transition: background-color 0.3s ease;
     }
-
     a.button:hover {
-      background-color: #991111;
+      background-color: var(--hover-red);
     }
   </style>
 </head>
