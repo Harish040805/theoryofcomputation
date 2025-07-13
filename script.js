@@ -366,3 +366,9 @@ redoBtn.textContent = 'Redo';
 redoBtn.style.margin = '5px';
 redoBtn.onclick = redo;
 document.getElementById('controls-section').appendChild(redoBtn);
+
+fetch('/api/generate-automaton', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ prompt })
+});
