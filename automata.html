@@ -4,223 +4,96 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Automata Graph Creator</title>
-	<link rel="stylesheet" href="automatacss.css">
-	<link rel="icon" href="https://avatars.githubusercontent.com/u/188087585?v=4" type="image/png">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="https://avatars.githubusercontent.com/u/188087585?v=4" type="image/png">
 </head>
 <body>
-<br><br>
-
-<button id="info-btn" title="Info">i</button>
-<div id="iframe-overlay" style="display: none;">
-  <div id="iframe-wrapper">
-    <button id="close-iframe-btn" title="Close">×</button>
-    <iframe srcdoc="
-      <html>
-        <head>
-          <style>
-            body { 
-				background: #111; 
-				color: white; 
-				font-family: Arial, sans-serif; 
-				padding: 20px; 
-			}
-            h1, h2 { 
-				color: #fff; 
-			}
-			h1 {font-size: 30px;}
-			h2 {font-size: 22px;}
-            p, ul, li { 
-				font-size: 16px; line-height: 1.5; 
-			}
-            .section { 
-				margin-bottom: 25px; 
-			}
-          </style>
-        </head>
-        <body>
- <section>
- <h1>Automata</h1>
- <h2>What is Automata?</h2>
- <p>Automata is the study of abstract machine (called automata) and the computational problems they can solve. Automata are mathematical models of computation that process input strings
- and determine if the input is accepted based on their internal state transitions.
- <br><br>
- They are fundamental in computer science for designing compilers, pasing and understanding computation limits.</p>
-    <h2>Types of Automata</h2>
-    <ul>
-      <li><strong>DFA (Deterministic Finite Automaton):</strong>
-        <ul>
-          <li>Each state has exactly one transition per input symbol. </li>
-		  <li>The machine's behaviour is fully determined by the current state and input.</li>
-          <li>Meaning it never has multiple options for the same input symbol.</li>
-        </ul>
-      </li>
-      <li><strong>NFA (Non-Deterministic Finite Automaton):</strong>
-        <ul>
-          <li>States can have zero, one or multiple transitions for a same input symbol.</li>
-		  <li>The machine can be in multiple states simultaneously.</li>
-          <li>Allows multiple possible next states or none.</li>
-        </ul>
-      </li>
-      <li><strong>PDA (Pushdown Automata):</strong>
-        <ul>
-          <li>Extends automata with a stack for memory.</li>
-          <li>Useful for recognizing context-free languages.</li>
-        </ul>
-      </li>
-      <li><strong>Turing Machine:</strong>
-        <ul>
-          <li>The most powerful automata or model.</li>
-          <li>Can simulate any computation algorithmically.</li>
-        </ul>
-      </li>
-    </ul>
-    <p>This gives users a basic taxonomy of automata types relevant in theory and practice.</p>
-  </section>
-
-  <section>
-    <h2>How to Use This Tool</h2>
-    <ol>
-      <li><strong>Add states:</strong><br />Use the input fields to enter states like <code>q0</code>, <code>q1</code>, etc.</li>
-      <li><strong>Set initial/final states:</strong><br />Specify which state the automaton starts from and which states are accepting/final.</li>
-      <li><strong>Select DFA/NFA:</strong><br />Choose the automaton type via radio buttons, which affects the transitions.</li>
-      <li><strong>View graph:</strong><br />The automaton is rendered as a graph with nodes (states) and arrows (transitions).</li>
-      <li><strong>Reset if needed:</strong><br />Clear all inputs and the graph to start fresh.</li>
-    </ol>
-  </section>
-        </body>
-      </html>
-    "></iframe>
+  <button id="info-btn" title="Info">i</button>
+  <div id="iframe-overlay" style="display: none;">
+    <div id="iframe-wrapper">
+      <button id="close-iframe-btn" title="Close">×</button>
+      <iframe src="info.html"></iframe>
+    </div>
   </div>
-</div>
-<style>
-  #info-btn {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    width: 40px;
-    height: 40px;
-    background-color: blue;
-    border: 3px solid white;
-    border-radius: 50%;
-    color: white;
-    font-weight: bold;
-    font-size: 17px;
-    cursor: pointer;
-    z-index: 9999;
-  }
-  #iframe-overlay {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100vw; height: 100vh;
-    background-color: rgba(0,0,0,0.9);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 9998;
- 1;
-  #iframe-wrapper {
-    position: relative;
-    width: 90%;
-    height: 80%;
-  }
-  #iframe-wrapper iframe {
-    width: 100%;
-    height: 100%;
-    border: none;
-    border-radius: 8px;
-    box-shadow: 0 0 10px #fff;
-  }
-  #close-iframe-btn {
-    position: absolute;
-    top: -10px;
-    right: -10px;
-    background-color: #B22222;
-    color: white;
-    border: none;
-    border-radius: 50%;
-    font-size: 20px;
-    width: 30px;
-    height: 30px;
-    cursor: pointer;
-    z-index: 10000;
-  }
-</style>
-<script>
-  const infoBtn = document.getElementById('info-btn');
-  const iframeOverlay = document.getElementById('iframe-overlay');
-  const closeBtn = document.getElementById('close-iframe-btn');
 
-  infoBtn.addEventListener('click', () => {
-    iframeOverlay.style.display = 'flex';
-  });
-
-  closeBtn.addEventListener('click', () => {
-    iframeOverlay.style.display = 'none';
-  });
-</script>
   <div class="layout">
-  <div style="flex: 1 1 70%;">
- 	<div style="text-align: center; margin-top: 20px;">
-	  <h1>Automata Graph Creator</h1>
-    </div> 
-    <div id="graph-container"></div>
-	<br><br><br>
-  </div>
-  <div class="side-panel" style="flex: 1 1 25%;">
+    <div style="flex: 1 1 70%;">
+      <div class="title">
+        <h1>Automata Graph Creator</h1>
+      </div>
+      <div id="graph-container"></div>
+    </div>
+
+    <div class="side-panel" style="flex: 1 1 28%;">
       <div id="mode-selector">
         <h2>Select Input Mode</h2>
         <div>
           <button id="data-btn">Data</button>
           <button id="equation-btn">Equation</button>
           <button id="text-btn">Text</button>
-		  <button id="ask-ai">Ask AI</button>
-<div id="ai-input" style="display: none;">
-  <p>Ask AI to build an automaton:</p>
-  <input id="ai-prompt" type="text" placeholder="Example: Accepts strings ending with 'ab'" />
-  <button id="submit-ai-btn">Generate</button>
-  <div id="ai-response" style="margin-top: 10px; font-size: 0.9rem; color: lightgreen;"></div>
-</div>
-
+          <button id="ask-ai">Ask AI</button>
         </div>
-        <div id="input-modes">
-          <div id="data-input" style="display: none;">
-            <input id="state" type="text" placeholder="Enter state (e.g., q0)">
-            <button id="add-state-btn">Add State</button>
-	    <button id="reset-btn" style="width: 30%;">Reset</button>
-            <div id="state-error" class="error"></div>
-            <br><br>
-<input id="initial-state" type="text" placeholder="Initial state">
-<input id="final-state" type="text" placeholder="Final state(s, comma-separated)">
-                        <div id="initial-state-error" class="error"></div>
-						<div id="final-state-error" class="error"></div>
-            <div id="states-container"></div>
-          </div>
-<div id="equation-input" style="display: none;">
-  <p>Enter equation:</p>
-  <textarea id="equation-textarea" placeholder="q0 + a = q1"></textarea>
-  <button id="solve-equation-btn">Solve</button>
-  <div id="equation-error" class="error"></div>
-</div>
 
-<div id="text-input" style="display: none;">
-  <p>Enter plain text:</p>
-  <input id="text-input-field" type="text" placeholder="Type something...">
-  <button id="solve-text-btn">Solve</button>
-  <div id="text-error" class="error"></div>
-</div>
+        <div id="ai-input" class="mode-section">
+          <p>Ask AI to build an automaton:</p>
+          <input id="ai-prompt" type="text" placeholder="Example: strings ending in 'ab'" />
+          <button id="submit-ai-btn">Generate</button>
+          <div id="ai-response"></div>
+        </div>
+
+        <div id="data-input" class="mode-section">
+          <input id="state" type="text" placeholder="Enter state (e.g., q0)">
+          <button id="add-state-btn">Add State</button>
+          <div id="state-error" class="error"></div>
+          <br><br>
+
+          <input id="alphabet" type="text" placeholder="Alphabet (e.g., a,b,ε)">
+          <div id="alphabet-error" class="error"></div>
+          <br>
+
+          <input id="initial-state" type="text" placeholder="Initial state">
+          <div id="initial-state-error" class="error"></div>
+
+          <input id="final-state" type="text" placeholder="Final state(s, comma-separated)">
+          <div id="final-state-error" class="error"></div>
+
+          <div id="states-container"></div>
+          <br>
+          <button id="reset-btn">Reset</button>
+        </div>
+
+        <div id="equation-input" class="mode-section">
+          <p>Enter transitions in equation form:</p>
+          <textarea id="equation-textarea" placeholder="q0 + a = q1"></textarea>
+          <button id="solve-equation-btn">Solve</button>
+          <div id="equation-error" class="error"></div>
+        </div>
+
+        <div id="text-input" class="mode-section">
+          <p>Enter transitions in plain text:</p>
+          <textarea id="text-input-field" placeholder="q0 a q1, q1 b q2"></textarea>
+          <button id="solve-text-btn">Solve</button>
+          <div id="text-error" class="error"></div>
         </div>
       </div>
+
       <div id="controls-section">
         <h2>Graph Controls</h2>
-        <div class="radio-group">
-          <label><input type="radio" name="type" value="dfa" checked> Deterministic (DFA)</label>
-          <label><input type="radio" name="type" value="nfa"> Non-Deterministic (NFA)</label>
-        </div>
+        <label><input type="radio" name="type" value="dfa" checked> Deterministic (DFA)</label>
+        <label><input type="radio" name="type" value="nfa"> Non-Deterministic (NFA)</label>
       </div>
     </div>
-	</div>
   </div>
+
   <script src="https://d3js.org/d3.v7.min.js"></script>
-	<script src="script.js"></script>
+  <script src="script.js"></script>
+  <script>
+    document.getElementById('info-btn').addEventListener('click', () => {
+      document.getElementById('iframe-overlay').style.display = 'flex';
+    });
+    document.getElementById('close-iframe-btn').addEventListener('click', () => {
+      document.getElementById('iframe-overlay').style.display = 'none';
+    });
+  </script>
 </body>
 </html>
