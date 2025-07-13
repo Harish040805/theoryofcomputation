@@ -90,9 +90,12 @@
     button:hover {
       background-color: var(--hover-red);
     }
-    #data-input #add-state-btn {
+    #data-input {
       width: 100%;
     }
+#add-state-btn {
+   width: 50%;
+}
     #mode-selector {
       padding: 20px;
       border: 1px solid var(--main-red);
