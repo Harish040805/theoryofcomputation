@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Automata Info</title>
+  <style>
+    body {
+      background: #111;
+      color: white;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      overflow-y: auto;
+      height: 100vh;
+      margin: 0;
+    }
+    h1 {
+      font-size: 30px;
+      margin-bottom: 10px;
+    }
+    h2 {
+      font-size: 22px;
+      margin-top: 25px;
+      margin-bottom: 10px;
+    }
+    p, ul, li {
+      font-size: 16px;
+      line-height: 1.5;
+    }
+    .section {
+      margin-bottom: 30px;
+    }
+  </style>
+</head>
+<body>
+  <section class="section">
+    <h1>Automata</h1>
+    <h2>What is Automata?</h2>
+    <p>
+      Automata is the study of abstract machines called automata and the computational problems they can solve. These mathematical models process input strings and decide acceptance based on internal state transitions.
+    </p>
+    <p>
+      Automata are fundamental in computer science for designing compilers, parsing, and understanding computation limits.
+    </p>
+    <h2>Types of Automata</h2>
+    <ul>
+      <li><strong>DFA (Deterministic Finite Automaton):</strong>
+        <ul>
+          <li>Each state has exactly one transition per input symbol.</li>
+          <li>The machine's behavior is fully determined by the current state and input.</li>
+          <li>There is never ambiguity in transition.</li>
+        </ul>
+      </li>
+      <li><strong>NFA (Non-Deterministic Finite Automaton):</strong>
+        <ul>
+          <li>States can have zero, one, or multiple transitions for the same input symbol.</li>
+          <li>The machine can be in multiple states simultaneously.</li>
+          <li>Allows multiple possible next states or none.</li>
+        </ul>
+      </li>
+      <li><strong>PDA (Pushdown Automata):</strong>
+        <ul>
+          <li>Extends automata with a stack memory.</li>
+          <li>Used to recognize context-free languages.</li>
+        </ul>
+      </li>
+      <li><strong>Turing Machine:</strong>
+        <ul>
+          <li>The most powerful automata model.</li>
+          <li>Can simulate any algorithmic computation.</li>
+        </ul>
+      </li>
+    </ul>
+  </section>
+
+  <section class="section">
+    <h2>How to Use This Tool</h2>
+    <ol>
+      <li><strong>Add states:</strong> Use input to enter states like <code>q0</code>, <code>q1</code>, etc.</li>
+      <li><strong>Set initial/final states:</strong> Specify start and accepting states.</li>
+      <li><strong>Select DFA or NFA:</strong> Choose automaton type via radio buttons.</li>
+      <li><strong>Input transitions:</strong> Enter transitions in data, equation, or text modes.</li>
+      <li><strong>View graph:</strong> The automaton is rendered visually.</li>
+      <li><strong>Reset:</strong> Clear all inputs and graph if needed.</li>
+    </ol>
+  </section>
+</body>
+</html>
