@@ -10,7 +10,7 @@ const buttons = {
   data: document.getElementById('data-btn'),
   equation: document.getElementById('equation-btn'),
   text: document.getElementById('text-btn'),
-  ai: document.getElementById('ask-ai')
+  ai: document.getElementById('toggleChatBtn')
 };
 
 const sections = {
