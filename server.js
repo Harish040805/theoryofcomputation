@@ -30,7 +30,7 @@ app.post('/api/generate-automaton', async (req, res) => {
     });
 
     const reply = chat.choices[0].message.content;
-    const data = JSON.parse(reply); // Make sure AI returns only valid JSON
+    const data = JSON.parse(reply); // Ensure AI returns valid JSON
 
     res.json(data);
   } catch (err) {
@@ -39,5 +39,6 @@ app.post('/api/generate-automaton', async (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
+  console.log(`✅ Server running at http://localhost:${port}`);
 });
+
