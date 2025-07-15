@@ -12,6 +12,7 @@ body {
   flex-direction: column;
   min-height: 100vh;
   padding: 20px;
+  font-size: 14px;
 }
 
 .layout {
@@ -46,6 +47,7 @@ button {
   cursor: pointer;
   margin: 5px 2px;
   font-weight: bold;
+  font-size: 14px;
 }
 
 button:hover {
@@ -70,6 +72,7 @@ textarea {
   color: #ff4c4c;
   font-size: 0.9em;
   margin-bottom: 10px;
+  border: none;
 }
 
 .side-panel {
@@ -178,6 +181,7 @@ textarea {
   margin-right: 5px;
   cursor: pointer;
   font-weight: bold;
+  font-size: 14px;
 }
 
 #controls-section button:hover {
@@ -191,6 +195,10 @@ textarea {
   padding: 10px 20px;
   cursor: pointer;
   font-size: 16px;
+}
+
+#chatLog, input[type="text"], button {
+  font-size: 14px;
 }
 
 @media (max-width: 768px) {
