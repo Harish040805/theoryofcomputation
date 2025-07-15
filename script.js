@@ -44,6 +44,7 @@ function restoreState(state) {
   document.getElementById('final-state').value = state.finalStates;
   document.querySelector(`input[name="type"][value="${isDFA ? 'dfa' : 'nfa'}"]`).checked = true;
   document.getElementById('states-container').innerHTML = states.map(s => `<div>${s}</div>`).join('');
+  alphabetInput.value = alphabet.join(',');
   regenerateGraph();
 }
 
@@ -165,16 +166,45 @@ document.getElementById('solve-equation-btn').addEventListener('click', () => {
   for (let line of lines) {
     const match = line.match(/^(\w+)\s*\+\s*(\w+|ε|epsilon)\s*=\s*(\w+)$/i);
     if (!match) return error.textContent = 'Invalid format. Use: q0 + a = q1';
-    const [_, from, symbol, to] = match;
+    const [_, from, symbolRaw, to] = match;
     if (!states.includes(from)) states.push(from);
     if (!states.includes(to)) states.push(to);
-    const cleanSymbol = symbol.toLowerCase() === 'epsilon' ? 'ε' : symbol;
-    if (!validateSymbol(cleanSymbol)) return error.textContent = `Symbol '${cleanSymbol}' not in alphabet!`;
-    const key = `${from}_${cleanSymbol}`;
-    if (isDFA && seen.has(key)) return error.textContent = `DFA can't have multiple transitions for '${from}' + '${cleanSymbol}'`;
-    transitions.push({ from, symbol: cleanSymbol, to });
-    seen.add(key);
-    if (cleanSymbol !== 'ε' && !alphabet.includes(cleanSymbol)) alphabet.push(cleanSymbol);
+    const symbol = symbolRaw.toLowerCase() === 'epsilon' ? 'ε' : symbolRaw;
+    if (!validateSymbol(symbol)) return error.textContent = `Symbol '${symbol}' not in alphabet!`;
+    if (isDFA && isDuplicateTransition(from, symbol, seen)) {
+      return error.textContent = `DFA can't have multiple transitions for '${from}' + '${symbol}'`;
+    }
+    transitions.push({ from, symbol, to });
+    if (symbol !== 'ε' && !alphabet.includes(symbol)) alphabet.push(symbol);
+  }
+  const initial = states[0];
+  const final = [states[states.length - 1]];
+  document.getElementById('initial-state').value = initial;
+  document.getElementById('final-state').value = final.join(',');
+  regenerateGraph();
+});
+
+document.getElementById('solve-text-btn').addEventListener('click', () => {
+  const input = document.getElementById('text-input-field').value.trim();
+  const error = document.getElementById('text-error');
+  if (!input) return error.textContent = 'Please enter transitions.';
+  error.textContent = '';
+  saveState();
+  transitions = [];
+  const entries = input.split(',');
+  const seen = new Set();
+  for (let entry of entries) {
+    const [from, symbolRaw, to] = entry.trim().split(/\s+/);
+    if (!from || !symbolRaw || !to) return error.textContent = 'Each transition must be: from symbol to';
+    const symbol = symbolRaw.toLowerCase() === 'epsilon' ? 'ε' : symbolRaw;
+    if (!validateSymbol(symbol)) return error.textContent = `Symbol '${symbol}' not in alphabet!`;
+    if (!states.includes(from)) states.push(from);
+    if (!states.includes(to)) states.push(to);
+    if (isDFA && isDuplicateTransition(from, symbol, seen)) {
+      return error.textContent = `DFA can't have multiple transitions for '${from}' + '${symbol}'`;
+    }
+    transitions.push({ from, symbol, to });
+    if (symbol !== 'ε' && !alphabet.includes(symbol)) alphabet.push(symbol);
   }
   const initial = states[0];
   const final = [states[states.length - 1]];
@@ -227,47 +257,59 @@ function regenerateGraph() {
 
 function drawGraph(states, transitions, initialState, finalStates) {
   d3.select('#graph-container').selectAll('*').remove();
-  const width = 800;
-  const height = 600;
+  
+  // Responsive width and height based on container size
+  const container = document.getElementById('graph-container');
+  const width = container.clientWidth || 800;
+  const height = container.clientHeight || 600;
+
   const svg = d3.select('#graph-container')
     .append('svg')
     .attr('viewBox', `0 0 ${width} ${height}`)
-    .attr('preserveAspectRatio', 'xMidYMid meet');
-  
-  const nodes = states.map(state => ({ id: state }));
-  const links = transitions.map(t => ({ source: t.from, target: t.to, label: t.symbol }));
-  
+    .attr('preserveAspectRatio', 'xMidYMid meet')
+    .style('width', '100%')
+    .style('height', '100%');
+
+  // Define arrow markers with improved sizes and colors
   svg.append('defs').selectAll('marker')
     .data(['arrowhead', 'startArrow'])
     .enter()
     .append('marker')
     .attr('id', d => d)
     .attr('viewBox', d => d === 'arrowhead' ? '-0 -5 10 10' : '-5 -5 10 10')
-    .attr('refX', d => d === 'arrowhead' ? 25 : 10)
+    .attr('refX', d => d === 'arrowhead' ? 30 : 12)
     .attr('refY', 0)
-    .attr('markerWidth', d => d === 'arrowhead' ? 13 : 10)
-    .attr('markerHeight', d => d === 'arrowhead' ? 13 : 10)
+    .attr('markerWidth', d => d === 'arrowhead' ? 15 : 12)
+    .attr('markerHeight', d => d === 'arrowhead' ? 15 : 12)
     .attr('orient', 'auto')
     .append('path')
     .attr('d', d => d === 'arrowhead' ? 'M 0,-5 L 10,0 L 0,5' : 'M -5,-5 L 5,0 L -5,5')
     .attr('fill', d => d === 'arrowhead' ? '#8B0A0A' : '#0f0');
-  
+
+  const nodes = states.map(state => ({ id: state }));
+  const links = transitions.map(t => ({ source: t.from, target: t.to, label: t.symbol }));
+
   const simulation = d3.forceSimulation(nodes)
-    .force('charge', d3.forceManyBody().strength(-300))
+    .force('charge', d3.forceManyBody().strength(-400))
     .force('link', d3.forceLink(links).id(d => d.id).distance(150))
     .force('center', d3.forceCenter(width / 2, height / 2))
     .force('collide', d3.forceCollide(30));
-  
+
+  // Draw links (edges)
   const link = svg.selectAll('.link').data(links).enter()
     .append('line')
     .attr('class', 'link')
-    .attr('stroke-dasharray', d => d.label === 'ε' ? '4 2' : '0')
+    .attr('stroke', '#8B0A0A')
+    .attr('stroke-width', 2)
+    .attr('stroke-dasharray', d => d.label === 'ε' ? '6 3' : '0')
     .attr('marker-end', 'url(#arrowhead)');
-  
+
+  // Draw nodes (states)
   const node = svg.selectAll('.node').data(nodes).enter()
     .append('circle')
     .attr('class', d => finalStates.includes(d.id) ? 'node final' : 'node')
     .attr('r', 20)
+    .attr('fill', '#8B0A0A')
     .call(d3.drag()
       .on('start', (event, d) => {
         if (!event.active) simulation.alphaTarget(0.3).restart();
@@ -283,7 +325,8 @@ function drawGraph(states, transitions, initialState, finalStates) {
         d.fx = null;
         d.fy = null;
       }));
-  
+
+  // Node labels
   const nodeLabel = svg.selectAll('.node-label').data(nodes).enter()
     .append('text')
     .text(d => d.id)
@@ -291,7 +334,8 @@ function drawGraph(states, transitions, initialState, finalStates) {
     .attr('dy', '-1.2em')
     .attr('fill', '#fff')
     .style('pointer-events', 'none');
-  
+
+  // Link labels (transition symbols)
   const linkLabel = svg.selectAll('.link-label').data(links).enter()
     .append('text')
     .text(d => d.label)
@@ -299,12 +343,13 @@ function drawGraph(states, transitions, initialState, finalStates) {
     .attr('font-size', '12px')
     .attr('fill', '#fff')
     .style('pointer-events', 'none');
-  
+
+  // Start arrow line (initial state indicator) - angled to avoid overlap
   const startLine = svg.append('line').attr('class', 'start-arrow')
     .attr('stroke', '#0f0')
-    .attr('stroke-width', 2)
+    .attr('stroke-width', 3)
     .attr('marker-end', 'url(#startArrow)');
-  
+
   simulation.on('tick', () => {
     link
       .attr('x1', d => d.source.x)
@@ -320,13 +365,14 @@ function drawGraph(states, transitions, initialState, finalStates) {
     linkLabel
       .attr('x', d => (d.source.x + d.target.x) / 2)
       .attr('y', d => (d.source.y + d.target.y) / 2);
-    
+
     const start = nodes.find(n => n.id === initialState);
     if (start) {
-      const offset = 30;
+      const offsetX = 30;
+      const offsetY = -10; // slight angle upwards
       startLine
-        .attr('x1', start.x - offset)
-        .attr('y1', start.y)
+        .attr('x1', start.x - offsetX)
+        .attr('y1', start.y + offsetY)
         .attr('x2', start.x - 5)
         .attr('y2', start.y)
         .attr('visibility', 'visible');
@@ -343,73 +389,24 @@ function isDuplicateTransition(from, symbol, seen) {
   return false;
 }
 
-document.getElementById('solve-equation-btn').addEventListener('click', () => {
-  const input = document.getElementById('equation-textarea').value.trim();
-  const error = document.getElementById('equation-error');
-  if (!input) return error.textContent = 'Please enter transitions.';
-  error.textContent = '';
-  saveState();
-  transitions = [];
-  const lines = input.split('\n');
-  const seen = new Set();
-  for (let line of lines) {
-    const match = line.match(/^(\w+)\s*\+\s*(\w+|ε|epsilon)\s*=\s*(\w+)$/i);
-    if (!match) return error.textContent = 'Invalid format. Use: q0 + a = q1';
-    const [_, from, symbolRaw, to] = match;
-    if (!states.includes(from)) states.push(from);
-    if (!states.includes(to)) states.push(to);
-    const symbol = symbolRaw.toLowerCase() === 'epsilon' ? 'ε' : symbolRaw;
-    if (!validateSymbol(symbol)) return error.textContent = `Symbol '${symbol}' not in alphabet!`;
-    if (isDFA && isDuplicateTransition(from, symbol, seen)) {
-      return error.textContent = `DFA can't have multiple transitions for '${from}' + '${symbol}'`;
-    }
-    transitions.push({ from, symbol, to });
-    if (symbol !== 'ε' && !alphabet.includes(symbol)) alphabet.push(symbol);
+// Add Undo / Redo buttons to controls section (if not already present)
+function addUndoRedoButtons() {
+  const controls = document.getElementById('controls-section');
+  if (!document.getElementById('undo-btn')) {
+    const undoBtn = document.createElement('button');
+    undoBtn.id = 'undo-btn';
+    undoBtn.textContent = 'Undo';
+    undoBtn.style.margin = '5px';
+    undoBtn.onclick = undo;
+    controls.appendChild(undoBtn);
   }
-  const initial = states[0];
-  const final = [states[states.length - 1]];
-  document.getElementById('initial-state').value = initial;
-  document.getElementById('final-state').value = final.join(',');
-  regenerateGraph();
-});
-
-document.getElementById('solve-text-btn').addEventListener('click', () => {
-  const input = document.getElementById('text-input-field').value.trim();
-  const error = document.getElementById('text-error');
-  if (!input) return error.textContent = 'Please enter transitions.';
-  error.textContent = '';
-  saveState();
-  transitions = [];
-  const entries = input.split(',');
-  const seen = new Set();
-  for (let entry of entries) {
-    const [from, symbolRaw, to] = entry.trim().split(/\s+/);
-    if (!from || !symbolRaw || !to) return error.textContent = 'Each transition must be: from symbol to';
-    const symbol = symbolRaw.toLowerCase() === 'epsilon' ? 'ε' : symbolRaw;
-    if (!validateSymbol(symbol)) return error.textContent = `Symbol '${symbol}' not in alphabet!`;
-    if (!states.includes(from)) states.push(from);
-    if (!states.includes(to)) states.push(to);
-    if (isDFA && isDuplicateTransition(from, symbol, seen)) {
-      return error.textContent = `DFA can't have multiple transitions for '${from}' + '${symbol}'`;
-    }
-    transitions.push({ from, symbol, to });
-    if (symbol !== 'ε' && !alphabet.includes(symbol)) alphabet.push(symbol);
+  if (!document.getElementById('redo-btn')) {
+    const redoBtn = document.createElement('button');
+    redoBtn.id = 'redo-btn';
+    redoBtn.textContent = 'Redo';
+    redoBtn.style.margin = '5px';
+    redoBtn.onclick = redo;
+    controls.appendChild(redoBtn);
   }
-  const initial = states[0];
-  const final = [states[states.length - 1]];
-  document.getElementById('initial-state').value = initial;
-  document.getElementById('final-state').value = final.join(',');
-  regenerateGraph();
-});
-
-const undoBtn = document.createElement('button');
-undoBtn.textContent = 'Undo';
-undoBtn.style.margin = '5px';
-undoBtn.onclick = undo;
-document.getElementById('controls-section').appendChild(undoBtn);
-
-const redoBtn = document.createElement('button');
-redoBtn.textContent = 'Redo';
-redoBtn.style.margin = '5px';
-redoBtn.onclick = redo;
-document.getElementById('controls-section').appendChild(redoBtn);
+}
+addUndoRedoButtons();
