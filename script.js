@@ -411,9 +411,5 @@ const toggleBtn = document.getElementById("toggleChatBtn");
 const chatContainer = document.getElementById("chatContainer");
 
 toggleBtn.addEventListener("click", () => {
-  if (chatContainer.style.display === "none" || !chatContainer.style.display) {
-    chatContainer.style.display = "block";
-  } else {
-    chatContainer.style.display = "none";
-  }
+  activateMode("ai");
 });
