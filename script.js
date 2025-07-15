@@ -183,35 +183,6 @@ document.getElementById('solve-equation-btn').addEventListener('click', () => {
   regenerateGraph();
 });
 
-document.getElementById('solve-text-btn').addEventListener('click', () => {
-  const input = document.getElementById('text-input-field').value.trim();
-  const error = document.getElementById('text-error');
-  if (!input) return error.textContent = 'Please enter transitions.';
-  error.textContent = '';
-  saveState();
-  transitions = [];
-  const entries = input.split(',');
-  const seen = new Set();
-  for (let entry of entries) {
-    const [from, symbol, to] = entry.trim().split(/\s+/);
-    if (!from || !symbol || !to) return error.textContent = 'Each transition must be: from symbol to';
-    const cleanSymbol = symbol.toLowerCase() === 'epsilon' ? 'ε' : symbol;
-    if (!validateSymbol(cleanSymbol)) return error.textContent = `Symbol '${cleanSymbol}' not in alphabet!`;
-    if (!states.includes(from)) states.push(from);
-    if (!states.includes(to)) states.push(to);
-    const key = `${from}_${cleanSymbol}`;
-    if (isDFA && seen.has(key)) return error.textContent = `DFA can't have multiple transitions for '${from}' + '${cleanSymbol}'`;
-    transitions.push({ from, symbol: cleanSymbol, to });
-    seen.add(key);
-    if (cleanSymbol !== 'ε' && !alphabet.includes(cleanSymbol)) alphabet.push(cleanSymbol);
-  }
-  const initial = states[0];
-  const final = [states[states.length - 1]];
-  document.getElementById('initial-state').value = initial;
-  document.getElementById('final-state').value = final.join(',');
-  regenerateGraph();
-});
-
 document.getElementById('submit-ai-btn').addEventListener('click', async () => {
   const prompt = document.getElementById('ai-prompt').value.trim();
   const responseBox = document.getElementById('ai-response');
@@ -262,8 +233,10 @@ function drawGraph(states, transitions, initialState, finalStates) {
     .append('svg')
     .attr('viewBox', `0 0 ${width} ${height}`)
     .attr('preserveAspectRatio', 'xMidYMid meet');
+  
   const nodes = states.map(state => ({ id: state }));
   const links = transitions.map(t => ({ source: t.from, target: t.to, label: t.symbol }));
+  
   svg.append('defs').selectAll('marker')
     .data(['arrowhead', 'startArrow'])
     .enter()
@@ -278,16 +251,19 @@ function drawGraph(states, transitions, initialState, finalStates) {
     .append('path')
     .attr('d', d => d === 'arrowhead' ? 'M 0,-5 L 10,0 L 0,5' : 'M -5,-5 L 5,0 L -5,5')
     .attr('fill', d => d === 'arrowhead' ? '#8B0A0A' : '#0f0');
+  
   const simulation = d3.forceSimulation(nodes)
     .force('charge', d3.forceManyBody().strength(-300))
     .force('link', d3.forceLink(links).id(d => d.id).distance(150))
     .force('center', d3.forceCenter(width / 2, height / 2))
     .force('collide', d3.forceCollide(30));
+  
   const link = svg.selectAll('.link').data(links).enter()
     .append('line')
     .attr('class', 'link')
     .attr('stroke-dasharray', d => d.label === 'ε' ? '4 2' : '0')
     .attr('marker-end', 'url(#arrowhead)');
+  
   const node = svg.selectAll('.node').data(nodes).enter()
     .append('circle')
     .attr('class', d => finalStates.includes(d.id) ? 'node final' : 'node')
@@ -307,6 +283,7 @@ function drawGraph(states, transitions, initialState, finalStates) {
         d.fx = null;
         d.fy = null;
       }));
+  
   const nodeLabel = svg.selectAll('.node-label').data(nodes).enter()
     .append('text')
     .text(d => d.id)
@@ -314,6 +291,7 @@ function drawGraph(states, transitions, initialState, finalStates) {
     .attr('dy', '-1.2em')
     .attr('fill', '#fff')
     .style('pointer-events', 'none');
+  
   const linkLabel = svg.selectAll('.link-label').data(links).enter()
     .append('text')
     .text(d => d.label)
@@ -321,10 +299,12 @@ function drawGraph(states, transitions, initialState, finalStates) {
     .attr('font-size', '12px')
     .attr('fill', '#fff')
     .style('pointer-events', 'none');
+  
   const startLine = svg.append('line').attr('class', 'start-arrow')
     .attr('stroke', '#0f0')
     .attr('stroke-width', 2)
     .attr('marker-end', 'url(#startArrow)');
+  
   simulation.on('tick', () => {
     link
       .attr('x1', d => d.source.x)
@@ -340,6 +320,7 @@ function drawGraph(states, transitions, initialState, finalStates) {
     linkLabel
       .attr('x', d => (d.source.x + d.target.x) / 2)
       .attr('y', d => (d.source.y + d.target.y) / 2);
+    
     const start = nodes.find(n => n.id === initialState);
     if (start) {
       const offset = 30;
@@ -355,6 +336,72 @@ function drawGraph(states, transitions, initialState, finalStates) {
   });
 }
 
+function isDuplicateTransition(from, symbol, seen) {
+  const key = `${from}_${symbol}`;
+  if (seen.has(key)) return true;
+  seen.add(key);
+  return false;
+}
+
+document.getElementById('solve-equation-btn').addEventListener('click', () => {
+  const input = document.getElementById('equation-textarea').value.trim();
+  const error = document.getElementById('equation-error');
+  if (!input) return error.textContent = 'Please enter transitions.';
+  error.textContent = '';
+  saveState();
+  transitions = [];
+  const lines = input.split('\n');
+  const seen = new Set();
+  for (let line of lines) {
+    const match = line.match(/^(\w+)\s*\+\s*(\w+|ε|epsilon)\s*=\s*(\w+)$/i);
+    if (!match) return error.textContent = 'Invalid format. Use: q0 + a = q1';
+    const [_, from, symbolRaw, to] = match;
+    if (!states.includes(from)) states.push(from);
+    if (!states.includes(to)) states.push(to);
+    const symbol = symbolRaw.toLowerCase() === 'epsilon' ? 'ε' : symbolRaw;
+    if (!validateSymbol(symbol)) return error.textContent = `Symbol '${symbol}' not in alphabet!`;
+    if (isDFA && isDuplicateTransition(from, symbol, seen)) {
+      return error.textContent = `DFA can't have multiple transitions for '${from}' + '${symbol}'`;
+    }
+    transitions.push({ from, symbol, to });
+    if (symbol !== 'ε' && !alphabet.includes(symbol)) alphabet.push(symbol);
+  }
+  const initial = states[0];
+  const final = [states[states.length - 1]];
+  document.getElementById('initial-state').value = initial;
+  document.getElementById('final-state').value = final.join(',');
+  regenerateGraph();
+});
+
+document.getElementById('solve-text-btn').addEventListener('click', () => {
+  const input = document.getElementById('text-input-field').value.trim();
+  const error = document.getElementById('text-error');
+  if (!input) return error.textContent = 'Please enter transitions.';
+  error.textContent = '';
+  saveState();
+  transitions = [];
+  const entries = input.split(',');
+  const seen = new Set();
+  for (let entry of entries) {
+    const [from, symbolRaw, to] = entry.trim().split(/\s+/);
+    if (!from || !symbolRaw || !to) return error.textContent = 'Each transition must be: from symbol to';
+    const symbol = symbolRaw.toLowerCase() === 'epsilon' ? 'ε' : symbolRaw;
+    if (!validateSymbol(symbol)) return error.textContent = `Symbol '${symbol}' not in alphabet!`;
+    if (!states.includes(from)) states.push(from);
+    if (!states.includes(to)) states.push(to);
+    if (isDFA && isDuplicateTransition(from, symbol, seen)) {
+      return error.textContent = `DFA can't have multiple transitions for '${from}' + '${symbol}'`;
+    }
+    transitions.push({ from, symbol, to });
+    if (symbol !== 'ε' && !alphabet.includes(symbol)) alphabet.push(symbol);
+  }
+  const initial = states[0];
+  const final = [states[states.length - 1]];
+  document.getElementById('initial-state').value = initial;
+  document.getElementById('final-state').value = final.join(',');
+  regenerateGraph();
+});
+
 const undoBtn = document.createElement('button');
 undoBtn.textContent = 'Undo';
 undoBtn.style.margin = '5px';
@@ -366,9 +413,3 @@ redoBtn.textContent = 'Redo';
 redoBtn.style.margin = '5px';
 redoBtn.onclick = redo;
 document.getElementById('controls-section').appendChild(redoBtn);
-
-fetch('/api/generate-automaton', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ prompt })
-});
