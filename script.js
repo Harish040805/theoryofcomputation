@@ -83,6 +83,13 @@ function activateMode(mode) {
     buttons[key].style.backgroundColor = key === mode ? 'var(--hover-red)' : 'var(--main-red)';
     sections[key].style.display = key === mode ? 'block' : 'none';
   }
+
+  // Show/hide chat container only when AI mode is active
+  if (mode === 'ai') {
+    chatContainer.style.display = 'block';
+  } else {
+    chatContainer.style.display = 'none';
+  }
 }
 activateMode('data');
 
@@ -408,8 +415,4 @@ function addUndoRedoButtons() {
 addUndoRedoButtons();
 
 const toggleBtn = document.getElementById("toggleChatBtn");
-const chatContainer = document.getElementById("chatContainer");
-
-toggleBtn.addEventListener("click", () => {
-  activateMode("ai");
-});
+const chatContainer = document.getElementById('chatContainer');
