@@ -184,6 +184,15 @@ textarea {
   background-color: #b22222;
 }
 
+#toggleChatBtn {
+  background-color: black;
+  border: 2px solid #de3163; /* cherry red border */
+  color: white;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
 @media (max-width: 768px) {
   .layout {
     flex-direction: column;
