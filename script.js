@@ -257,8 +257,7 @@ function regenerateGraph() {
 
 function drawGraph(states, transitions, initialState, finalStates) {
   d3.select('#graph-container').selectAll('*').remove();
-  
-  // Responsive width and height based on container size
+
   const container = document.getElementById('graph-container');
   const width = container.clientWidth || 800;
   const height = container.clientHeight || 600;
@@ -270,7 +269,9 @@ function drawGraph(states, transitions, initialState, finalStates) {
     .style('width', '100%')
     .style('height', '100%');
 
-  // Define arrow markers with improved sizes and colors
+  const nodes = states.map(state => ({ id: state }));
+  const links = transitions.map(t => ({ source: t.from, target: t.to, label: t.symbol }));
+
   svg.append('defs').selectAll('marker')
     .data(['arrowhead', 'startArrow'])
     .enter()
@@ -284,10 +285,7 @@ function drawGraph(states, transitions, initialState, finalStates) {
     .attr('orient', 'auto')
     .append('path')
     .attr('d', d => d === 'arrowhead' ? 'M 0,-5 L 10,0 L 0,5' : 'M -5,-5 L 5,0 L -5,5')
-    .attr('fill', d => d === 'arrowhead' ? '#8B0A0A' : '#0f0');
-
-  const nodes = states.map(state => ({ id: state }));
-  const links = transitions.map(t => ({ source: t.from, target: t.to, label: t.symbol }));
+    .attr('fill', d => d === 'arrowhead' ? '#fff' : '#0f0');
 
   const simulation = d3.forceSimulation(nodes)
     .force('charge', d3.forceManyBody().strength(-400))
@@ -295,16 +293,15 @@ function drawGraph(states, transitions, initialState, finalStates) {
     .force('center', d3.forceCenter(width / 2, height / 2))
     .force('collide', d3.forceCollide(30));
 
-  // Draw links (edges)
   const link = svg.selectAll('.link').data(links).enter()
     .append('line')
     .attr('class', 'link')
-    .attr('stroke', '#8B0A0A')
-    .attr('stroke-width', 2)
+    .attr('stroke', '#fff')      
+    .attr('stroke-width', 4)
+    .attr('stroke-opacity', 1)
     .attr('stroke-dasharray', d => d.label === 'ε' ? '6 3' : '0')
     .attr('marker-end', 'url(#arrowhead)');
 
-  // Draw nodes (states)
   const node = svg.selectAll('.node').data(nodes).enter()
     .append('circle')
     .attr('class', d => finalStates.includes(d.id) ? 'node final' : 'node')
@@ -326,7 +323,6 @@ function drawGraph(states, transitions, initialState, finalStates) {
         d.fy = null;
       }));
 
-  // Node labels
   const nodeLabel = svg.selectAll('.node-label').data(nodes).enter()
     .append('text')
     .text(d => d.id)
@@ -335,7 +331,6 @@ function drawGraph(states, transitions, initialState, finalStates) {
     .attr('fill', '#fff')
     .style('pointer-events', 'none');
 
-  // Link labels (transition symbols)
   const linkLabel = svg.selectAll('.link-label').data(links).enter()
     .append('text')
     .text(d => d.label)
@@ -344,7 +339,6 @@ function drawGraph(states, transitions, initialState, finalStates) {
     .attr('fill', '#fff')
     .style('pointer-events', 'none');
 
-  // Start arrow line (initial state indicator) - angled to avoid overlap
   const startLine = svg.append('line').attr('class', 'start-arrow')
     .attr('stroke', '#0f0')
     .attr('stroke-width', 3)
@@ -356,12 +350,15 @@ function drawGraph(states, transitions, initialState, finalStates) {
       .attr('y1', d => d.source.y)
       .attr('x2', d => d.target.x)
       .attr('y2', d => d.target.y);
+
     node
       .attr('cx', d => d.x)
       .attr('cy', d => d.y);
+
     nodeLabel
       .attr('x', d => d.x)
       .attr('y', d => d.y - 25);
+
     linkLabel
       .attr('x', d => (d.source.x + d.target.x) / 2)
       .attr('y', d => (d.source.y + d.target.y) / 2);
@@ -369,7 +366,7 @@ function drawGraph(states, transitions, initialState, finalStates) {
     const start = nodes.find(n => n.id === initialState);
     if (start) {
       const offsetX = 30;
-      const offsetY = -10; // slight angle upwards
+      const offsetY = -10;
       startLine
         .attr('x1', start.x - offsetX)
         .attr('y1', start.y + offsetY)
@@ -389,7 +386,6 @@ function isDuplicateTransition(from, symbol, seen) {
   return false;
 }
 
-// Add Undo / Redo buttons to controls section (if not already present)
 function addUndoRedoButtons() {
   const controls = document.getElementById('controls-section');
   if (!document.getElementById('undo-btn')) {
