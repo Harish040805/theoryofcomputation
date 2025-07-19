@@ -650,5 +650,14 @@ function updateCheckboxes() {
     document.getElementById('accept-state').checked = automaton.states.some(s => s.isAccept);
 }
 </script>
+    <script>
+document.getElementById('info-btn').addEventListener('click', () => {
+  document.getElementById('iframe-overlay').style.display = 'block';
+});
+
+document.getElementById('close-iframe-btn').addEventListener('click', () => {
+  document.getElementById('iframe-overlay').style.display = 'none';
+});
+</script>
 </body>
 </html>
