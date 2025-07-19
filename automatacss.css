@@ -257,3 +257,52 @@ textarea {
     min-height: 400px;
   }
 }
+
+    #toggleChatBtn {
+      background-color: black;
+      border: 2px solid #de3163;
+      color: white;
+      padding: 10px 20px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    #chatContainer {
+      display: none;
+      margin-top: 20px;
+      border: 2px solid #ccc;
+      padding: 20px;
+      max-width: 500px;
+      background-color: #f9f9f9;
+      position: relative;
+    }
+    #closeBtn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: #de3163;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      cursor: pointer;
+    }
+    #chatLog {
+      margin-top: 10px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      background: #fff;
+      min-height: 100px;
+    }
+    input[type="text"] {
+      width: 90%;
+      padding: 10px;
+      font-size: 14px;
+      margin-top: 10px;
+      border: 1px solid #ccc;
+    }
+    #sendBtn {
+      padding: 10px;
+      background-color: #333;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
