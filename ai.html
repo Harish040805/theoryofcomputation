@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Smart AI Chat</title>
+  <style>
+    body {
+      background-color: white;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+    #toggleChatBtn {
+      background-color: black;
+      border: 2px solid #de3163;
+      color: white;
+      padding: 10px 20px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    #chatContainer {
+      display: none;
+      margin-top: 20px;
+      border: 2px solid #ccc;
+      padding: 20px;
+      max-width: 500px;
+      background-color: #f9f9f9;
+      position: relative;
+    }
+    #closeBtn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: #de3163;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      cursor: pointer;
+    }
+    #chatLog {
+      margin-top: 10px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      background: #fff;
+      min-height: 100px;
+    }
+    input[type="text"] {
+      width: 90%;
+      padding: 10px;
+      font-size: 14px;
+      margin-top: 10px;
+      border: 1px solid #ccc;
+    }
+    #sendBtn {
+      padding: 10px;
+      background-color: #333;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+<button id="toggleChatBtn">Open AI Chat</button>
+<div id="chatContainer">
+  <button id="closeBtn">Close</button>
+  <h3>Simulated AI Chat (Specialized in Automata concepts)</h3>
+  <div id="chatLog">Hello! Ask me something.</div>
+  <input type="text" id="userInput" placeholder="Type your question here..." />
+  <button id="sendBtn">Send</button>
+</div>
+<script>
+const toggleBtn = document.getElementById("toggleChatBtn");
+const chatContainer = document.getElementById("chatContainer");
+const closeBtn = document.getElementById("closeBtn");
+const chatLog = document.getElementById("chatLog");
+const userInput = document.getElementById("userInput");
+const sendBtn = document.getElementById("sendBtn");
+
+toggleBtn.addEventListener("click", () => {
+  if (chatContainer.style.display === "none") {
+    chatContainer.style.display = "block";
+  } else {
+    chatContainer.style.display = "none";
+  }
+});
+
+closeBtn.addEventListener("click", () => {
+  chatContainer.style.display = "none";
+});
+
+function processInput(input) {
+  const message = input.toLowerCase().trim();
+
+  const greetings = ["hi", "hello", "helo", "hy", "hyy", "hii", "hey"];
+  const typeWords = ["types", "dfa", "nfa", "pushdown", "finite"];
+  
+   let matchCount = 0;
+  if (greetings.some(word => new RegExp(`\\b${word}\\b`).test(message))) matchCount++;
+  if (message.includes("how") && message.includes("website")) matchCount++;
+  if (message.includes("website") && message.includes("about")) matchCount++;
+  if (typeWords.some(word => message.includes(word))) matchCount++;
+  if (message.includes("automata")) matchCount++;
+
+  if (matchCount > 1) {
+    return "Please ask one question at a time so I can give you a clear and helpful answer.";
+  }
+  if (greetings.some(word => new RegExp(`\\b${word}\\b`).test(message))) {
+    return "Hello! How can I help you today?";
+  }
+  if (message.includes("how") && message.includes("website")) {
+    return "To know how to use the website, please click the blue color information button that is placed on the top right corner of the webpage";
+  }
+  if (message.includes("website") && message.includes("about")) {
+    return "This website is about Automata Theory that is used in the concept of creating abstract machines. To know how to use the website, please click the blue color information button that is placed on the top right corner of the webpage";
+  }
+  if (typeWords.some(word => message.includes(word))) {
+    return "There are four main types of automata in automata theory:\n\n1. Finite Automata (FA) – used for recognizing regular languages. Includes:\n   - DFA (Deterministic Finite Automata)\n   - NFA (Nondeterministic Finite Automata)\n\n2. Pushdown Automata (PDA) – used for recognizing context-free languages. It uses a stack.\n\n3. Linear Bounded Automata (LBA) – used for context-sensitive languages. It’s a restricted form of a Turing Machine.\n\n4. Turing Machine (TM) – the most powerful model; used for recognizing recursively enumerable languages.\n\nEach type models increasing levels of computational power and is used in compilers, parsers, language design, and problem-solving in theoretical computer science.";
+  }
+  if (message.includes("automata")) {
+    return "Automata is a mathematical model for a machine with a finite number of states. It reads input symbols and changes states according to rules. It is the foundation of automata theory, which is used in designing compilers, text processing, and modeling of systems like traffic lights and vending machines.";
+  }
+  if (message.includes("fuck")) {
+    return "Fuck you to the core!";
+  }
+  if (["initial state", "final state", "state", "q0", "q1"].some(word => message.includes(word))) {
+	return "In this website, a state represents a node in the automaton graph. The initial state is where the automaton starts, and final states indicate accepting nodes.";
+  }
+  if (message.includes("data")) {
+	return "In this website, Data is the mode that allows us to give inputs for the automata simulation in the form of raw data.";
+  }
+  if (message.includes("equation")) {
+	return "In this website, Equation mode lets you enter automata transitions and rules using mathematical or symbolic expressions.";
+  }
+  if (message.includes("text")) {
+	return "In this website, Text mode allows you to input automata definitions or queries using plain text format.";
+  }
+  if (message.includes("ask ai")) {
+	return "Use the 'Ask AI' feature to get automated help and explanations about automata and this website.";
+  }
+  if (["a", "b", "c", "d"].some(letter => message.includes(letter))) {
+	return "These are example input symbols (alphabet) you can use in automata simulations on this website.";
+  }
+  return "Please ask only from the content (Automata Therory) as I am limited to the content";
+}
+
+sendBtn.addEventListener("click", () => {
+  const input = userInput.value;
+  if (input) {
+    const response = processInput(input);
+    chatLog.innerHTML += `<br><strong>You:</strong> ${input}<br><strong>AI:</strong> ${response}`;
+    userInput.value = "";
+    chatLog.scrollTop = chatLog.scrollHeight;
+  }
+});
+
+userInput.addEventListener("keypress", (e) => {
+  if (e.key === "Enter") {
+    sendBtn.click();
+  }
+});
+</script>
+</body>
+</html>
