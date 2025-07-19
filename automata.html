@@ -1,13 +1,263 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Automata Graph Creator</title>
-  <link rel="stylesheet" href="automatacss.css">
-  <link rel="icon" href="https://avatars.githubusercontent.com/u/188087585?v=4" type="image/png">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Automata Simulator</title>
+    <style>
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+body {
+  background-color: #000000; 
+  color: #f28c8c;
+  line-height: 1.6;
+  padding: 20px;
+}
+h1, h2, h3 {
+  color: #ff6666;
+  margin-bottom: 15px;
+}
+button {
+  background-color: #000;
+  color: #ff6666;
+  border: 2px solid #ff6666;
+  padding: 10px 16px;
+  margin: 8px;
+  cursor: pointer;
+  transition: 0.3s ease;
+  border-radius: 6px;
+}
+button:hover {
+  background-color: #ff6666;
+  color: #000;
+  border-color: #ff9999;
+}
+input, select, textarea {
+  background-color: #111;
+  color: #f28c8c;
+  border: 1px solid #ff6666;
+  padding: 8px;
+  margin: 5px 0;
+  border-radius: 4px;
+}
+.panel, .container, .section, .card {
+  background-color: #111;
+  border: 1px solid #ff6666;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+a {
+  color: #ff6666;
+  text-decoration: none;
+}
+a:hover {
+  color: #ff9999;
+  text-decoration: underline;
+}
+#graph-container, #transition-table {
+  background-color: #111;
+  border: 1px dashed #ff6666;
+  padding: 10px;
+  border-radius: 10px;
+}
+button.active {
+  background-color: #ff6666;
+  color: #000;
+}
+.notification {
+  position: fixed;
+  top: 35% !important;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #fff;
+  border: 1px solid #bbb;
+  padding: 20px;
+  width: 610px;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  animation: fade-in 0.3s forwards;
+  display: none;
+  border-radius: 15px;
+}
+.notification.hide {
+  animation: fade-out 0.3s forwards;
+}
+@keyframes fade-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes fade-out {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.notification-title {
+  font-weight: bold;
+  font-size: 15.5px;
+  margin-bottom: 10px;
+  text-align: center;
+  color: #000;
+}
+.notification-message {
+  font-size: 13.5px;
+  margin-top: 5px;
+}
+.notification-close {
+  background-color: #000;
+  color: #ff6666;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.notification-close:hover {
+  background-color: #ff6666;
+}
+#acceptModal {
+  display: none;
+  position: fixed;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  background: #111;
+  color: #f28c8c;
+  border: 2px solid #ff6666;
+  padding: 20px 30px;
+  border-radius: 10px;
+  z-index: 10000;
+  text-align: center;
+  box-shadow: 0 0 15px rgba(255, 102, 102, 0.7);
+}
+#acceptModal p {
+  font-size: 18px;
+  margin-bottom: 20px;
+}
+#acceptModal button {
+  margin: 0 10px;
+  min-width: 70px;
+}
+.custom-checkbox {
+  position: relative;
+  padding-left: 28px;
+  cursor: pointer;
+  user-select: none;
+  color: #f28c8c;
+}
+
+.custom-checkbox input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+.custom-checkbox span.checkmark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 20px;
+  width: 20px;
+  background-color: #111;
+  border: 2px solid #ff6666;
+  border-radius: 4px;
+}
+
+.custom-checkbox:hover input ~ .checkmark {
+  background-color: #ff6666;
+}
+
+.custom-checkbox input:checked ~ .checkmark {
+  background-color: #ff6666;
+}
+
+.custom-checkbox .checkmark:after {
+  content: "";
+  position: absolute;
+  display: none;
+}
+
+.custom-checkbox input:checked ~ .checkmark:after {
+  display: block;
+}
+
+.custom-checkbox .checkmark:after {
+  left: 6px;
+  top: 2px;
+  width: 6px;
+  height: 12px;
+  border: solid #000;
+  border-width: 0 3px 3px 0;
+  transform: rotate(45deg);
+}
+    </style>
 </head>
 <body>
+<script>
+const iframe = document.createElement('iframe');
+iframe.style.position = 'fixed';
+iframe.style.top = '0';
+iframe.style.left = '0';
+iframe.style.width = '100%';
+iframe.style.height = '100%';
+iframe.style.zIndex = '9999';
+iframe.style.border = 'none';
+
+const iframeContent = `
+  <html>
+    <head>
+      <style>
+        button {
+          padding: 10px 20px; 
+          border: 2px solid #ff6666; 
+          border-radius: 5px; 
+          background-color: #000; 
+          color: #ff6666; 
+          cursor: pointer;
+        }
+        button:hover {
+          background-color: #ff6666 ;
+          color: #000;
+        }
+      </style>
+    </head>
+    <body style="font-family: Arial, sans-serif; background-color: #000; text-align: center; margin-top: 20%;">
+      <h1 style="color: #fff;">Automata Simulator</h1>
+      <button onclick="parent.document.body.removeChild(parent.document.querySelector('iframe'));">Enter</button>
+    </body>
+  </html>
+`;
+
+iframe.srcdoc = iframeContent;
+document.body.appendChild(iframe);
+</script>
+<div id="notification" class="notification">
+  <div class="notification-message">
+    <div class="notification-title">Instructions</div>
+        * First, add states by clicking the "Vertex" button and labeling each state.<br>
+        * To add transitions between states, enable the "Edge" mode by clicking the Edge button.<br>
+        * In Edge mode, click on the source state then the destination state to create a transition.<br>
+        * Each transition requires an input symbol (single character) to label the edge.<br>
+        * Only one transition per symbol from a given state is allowed (DFA rule).<br>
+        * The "Undo" button reverts your last action.<br>
+        * The "Reset" button clears all states and transitions.<br>
+        * To simulate your automaton, click the "Solve" button and enter an input string.<br>
+        * The simulation will show if the input string is accepted or rejected based on final states.<br>
+        * Use the "Delete" button to remove states or transitions by clicking on them.<br>
+  </div>
+  <button class="notification-close">OK</button>
+</div>    
   <button id="info-btn" title="Info">i</button>
   <div id="iframe-overlay" style="display: none;">
     <div id="iframe-wrapper">
@@ -15,93 +265,390 @@
       <iframe src="info.html"></iframe>
     </div>
   </div>
-
-  <div class="layout">
-    <div style="flex: 1 1 70%;">
-      <div class="title">
-        <h1>Automata Graph Creator</h1>
-      </div>
-      <div id="graph-container"></div>
-    </div>
-
-    <div class="side-panel" style="flex: 1 1 28%;">
-      <div id="mode-selector">
-        <h2>Select Input Mode</h2>
-        <div>
-          <button id="data-btn">Data</button>
-          <button id="equation-btn">Equation</button>
-          <button id="text-btn">Text</button>
-          <button id="toggleChatBtn">Ask AI</button>
-          <div id="chatContainer" style="display: none;"></div>
-        </div>
-
-        <div id="ai-input" class="mode-section">
-          <p>Ask AI to build an automaton:</p>
-          <input id="ai-prompt" type="text" placeholder="Example: strings ending in 'ab'" />
-          <button id="submit-ai-btn">Generate</button>
-          <div id="ai-response"></div>
-        </div>
-
-        <div id="data-input" class="mode-section">
-          <input id="state" type="text" placeholder="Enter state (e.g., q0)">
-          <button id="add-state-btn">Add State</button>
-          <div id="state-error" class="error"></div>
-          <br><br>
-
-<div>
-  <label for="alphabet">Input Alphabet (comma separated):</label>
-  <input type="text" id="alphabet" placeholder="e.g. a,b,c" />
+<div id="acceptModal">
+  <p>Is this a final state?</p>
+  <button id="yesBtn">Yes</button>
+  <button id="noBtn">No</button>
 </div>
-<div id="data-controls-section" style="margin-top: 10px;"></div>
-          <div id="alphabet-error" class="error"></div>
-          <br>
 
-          <input id="initial-state" type="text" placeholder="Initial state">
-          <div id="initial-state-error" class="error"></div>
-
-          <input id="final-state" type="text" placeholder="Final state(s, comma-separated)">
-          <div id="final-state-error" class="error"></div>
-
-          <div id="states-container"></div>
-          <br>
-          <button id="reset-btn">Reset</button>
+<center>
+<div class="container">
+    <div id="main-content" style="width: 100%; height: 100%; float: center;">
+        <h1>Automata Simulator</h1>
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <canvas id="canvas" width="1150" height="550"></canvas>
+        <table>
+                <tr>
+                    <th>Feature</th>
+                    <th>Present?</th>
+                </tr>
+<tr>
+    <td>Deterministic Automaton (DFA)</td>
+    <td>
+      <label class="custom-checkbox">
+        <input type="checkbox" id="deterministic" disabled />
+        <span class="checkmark"></span>
+      </label>
+    </td>
+  </tr>
+  <tr>
+    <td>Non-deterministic Automaton (NFA)</td>
+    <td>
+      <label class="custom-checkbox">
+        <input type="checkbox" id="nondeterministic" disabled />
+        <span class="checkmark"></span>
+      </label>
+    </td>
+  </tr>
+  <tr>
+    <td>Has Epsilon (ε) Transitions</td>
+    <td>
+      <label class="custom-checkbox">
+        <input type="checkbox" id="epsilon" disabled />
+        <span class="checkmark"></span>
+      </label>
+    </td>
+  </tr>
+  <tr>
+    <td>Start State Defined</td>
+    <td>
+      <label class="custom-checkbox">
+        <input type="checkbox" id="start-state" disabled />
+        <span class="checkmark"></span>
+      </label>
+    </td>
+  </tr>
+  <tr>
+    <td>Accept (Final) State(s) Present</td>
+    <td>
+      <label class="custom-checkbox">
+        <input type="checkbox" id="accept-state" disabled />
+        <span class="checkmark"></span>
+      </label>
+    </td>
+  </tr>
+            </table>
         </div>
-
-        <div id="equation-input" class="mode-section">
-          <p>Enter transitions in equation form:</p>
-          <textarea id="equation-textarea" placeholder="q0 + a = q1"></textarea>
-          <button id="solve-equation-btn">Solve</button>
-          <div id="equation-error" class="error"></div>
+        <div class="button-container">
+            <button id="vertex-btn" title="Add a new state">Vertex</button>
+            <button id="edge-btn" title="Toggle transition (edge) mode">Edge</button>
+            <button id="undo-btn" title="Undo last action">Undo</button>
+            <button id="reset-btn" title="Reset automaton">Reset</button>
+            <button id="delete-btn" title="Delete state or transition">Delete</button>
         </div>
+    </div>                
+</div>
+</center>
 
-        <div id="text-input" class="mode-section">
-          <p>Enter transitions in plain text:</p>
-          <textarea id="text-input-field" placeholder="q0 a q1, q1 b q2"></textarea>
-          <button id="solve-text-btn">Solve</button>
-          <div id="text-error" class="error"></div>
-        </div>
-      </div>
+<script>
+const notificationBox = document.querySelector('.notification');
+const notificationCloseButton = document.querySelector('.notification-close');
 
-      <div id="controls-section">
-        <h2>Graph Controls</h2>
-        <fieldset style="border: 1px solid #555; padding: 10px; border-radius: 5px;">
-        <legend>Automaton Type</legend>
-        <label><input type="radio" name="type" value="dfa" checked> Deterministic (DFA)</label>
-        <label><input type="radio" name="type" value="nfa"> Non-Deterministic (NFA)</label>
-        </fieldset>
-      </div>
-    </div>
-  </div>
+notificationBox.style.display = 'block';
 
-  <script src="https://d3js.org/d3.v7.min.js"></script>
-  <script src="script.js"></script>
-  <script>
-    document.getElementById('info-btn').addEventListener('click', () => {
-      document.getElementById('iframe-overlay').style.display = 'flex';
+notificationCloseButton.addEventListener('click', () => {
+    notificationBox.classList.add('hide');
+    setTimeout(() => {
+        notificationBox.style.display = 'none';
+    }, 300);
+});
+
+let automaton = {
+    states: [],          
+    transitions: [],     
+    alphabet: new Set(),
+};
+
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+let draggingState = null;
+let offsetX = 0;
+let offsetY = 0;
+
+let isTransitionMode = false;
+let transitionFromState = null;
+
+let history = [];
+let historyIndex = -1;
+
+function drawAutomaton() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    automaton.transitions.forEach((trans) => {
+        const from = trans.from;
+        const to = trans.to;
+
+        ctx.beginPath();
+        ctx.moveTo(from.x, from.y);
+        ctx.lineTo(to.x, to.y);
+        ctx.strokeStyle = 'white';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        let angle = Math.atan2(to.y - from.y, to.x - from.x);
+        let arrowSize = 10;
+        ctx.beginPath();
+        ctx.moveTo(to.x, to.y);
+        ctx.lineTo(to.x - arrowSize * Math.cos(angle - Math.PI / 6), to.y - arrowSize * Math.sin(angle - Math.PI / 6));
+        ctx.lineTo(to.x - arrowSize * Math.cos(angle + Math.PI / 6), to.y - arrowSize * Math.sin(angle + Math.PI / 6));
+        ctx.lineTo(to.x, to.y);
+        ctx.fillStyle = 'white';
+        ctx.fill();
+
+        const midX = (from.x + to.x) / 2;
+        const midY = (from.y + to.y) / 2;
+        ctx.fillStyle = 'red';
+        ctx.font = '16px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(trans.symbol, midX, midY - 10);
     });
-    document.getElementById('close-iframe-btn').addEventListener('click', () => {
-      document.getElementById('iframe-overlay').style.display = 'none';
+
+    automaton.states.forEach((state) => {
+        ctx.beginPath();
+        ctx.arc(state.x, state.y, 25, 0, 2 * Math.PI);
+        ctx.fillStyle = '#ff6666';
+        ctx.fill();
+
+        if (state.isAccept) {
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = '#ffd700'; 
+            ctx.beginPath();
+            ctx.arc(state.x, state.y, 30, 0, 2 * Math.PI);
+            ctx.stroke();
+        } else {
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#ff6666';
+            ctx.beginPath();
+            ctx.arc(state.x, state.y, 25, 0, 2 * Math.PI);
+            ctx.stroke();
+        }
+
+        if(state.isStart) {
+            ctx.beginPath();
+            ctx.moveTo(state.x - 40, state.y);
+            ctx.lineTo(state.x - 25, state.y);
+            ctx.strokeStyle = 'black';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(state.x - 30, state.y - 7);
+            ctx.lineTo(state.x - 40, state.y);
+            ctx.lineTo(state.x - 30, state.y + 7);
+            ctx.fillStyle = 'white';
+            ctx.fill();
+        }
+
+        ctx.fillStyle = 'white';
+        ctx.font = '18px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(state.label, state.x, state.y);
     });
-  </script>
+}
+
+setInterval(drawAutomaton, 100);
+
+canvas.addEventListener('mousedown', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    automaton.states.forEach((state) => {
+        if (Math.hypot(x - state.x, y - state.y) < 25) {
+            draggingState = state;
+            offsetX = x - state.x;
+            offsetY = y - state.y;
+            // saveHistory();  // Commented out to avoid spamming history during drag
+        }
+    });
+});
+
+canvas.addEventListener('mousemove', (e) => {
+    if (draggingState) {
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        draggingState.x = x - offsetX;
+        draggingState.y = y - offsetY;
+    }
+
+    if (isTransitionMode && transitionFromState) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawAutomaton();
+
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        ctx.beginPath();
+        ctx.moveTo(transitionFromState.x, transitionFromState.y);
+        ctx.lineTo(x, y);
+        ctx.strokeStyle = 'black';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        let angle = Math.atan2(y - transitionFromState.y, x - transitionFromState.x);
+        let arrowSize = 10;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x - arrowSize * Math.cos(angle - Math.PI / 6), y - arrowSize * Math.sin(angle - Math.PI / 6));
+        ctx.lineTo(x - arrowSize * Math.cos(angle + Math.PI / 6), y - arrowSize * Math.sin(angle + Math.PI / 6));
+        ctx.lineTo(x, y);
+        ctx.fillStyle = 'black';
+        ctx.fill();
+    }
+});
+
+canvas.addEventListener('mouseup', (e) => {
+    if(draggingState) {
+      saveHistory();  
+    }
+    draggingState = null;
+});
+
+canvas.addEventListener('click', (e) => {
+    if (isTransitionMode) {
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        let clickedState = null;
+        automaton.states.forEach((state) => {
+            if (Math.hypot(x - state.x, y - state.y) < 25) {
+                clickedState = state;
+            }
+        });
+
+        if (!transitionFromState) {
+            if(clickedState) transitionFromState = clickedState;
+        } else if(clickedState) {
+            let symbol = prompt('Enter input symbol (single character) (Leave empty and click ok for ε (Empty) transition:');
+if(symbol === '') {
+    symbol = 'ε';
+    automaton.transitions.push({
+        from: transitionFromState,
+        to: clickedState,
+        symbol: symbol
+    });
+    automaton.alphabet.add(symbol);
+    saveHistory();
+} else if(symbol && symbol.length === 1) {
+    automaton.transitions.push({
+        from: transitionFromState,
+        to: clickedState,
+        symbol: symbol
+    });
+    automaton.alphabet.add(symbol);
+    saveHistory();
+} else {
+    alert('Invalid symbol! Must be a single character or empty for epsilon.');
+}
+            transitionFromState = null;
+        }
+    }
+});
+
+document.getElementById('edge-btn').addEventListener('click', () => {
+    isTransitionMode = !isTransitionMode;
+    transitionFromState = null;
+    alert(isTransitionMode ? 'Transition Mode Enabled: Click source and destination states to add transition.' : 'Transition Mode Disabled');
+    saveHistory();
+});
+
+async function askAcceptState() {
+  return new Promise((resolve) => {
+    const modal = document.getElementById('acceptModal');
+    modal.style.display = 'block';
+
+    const yesBtn = document.getElementById('yesBtn');
+    const noBtn = document.getElementById('noBtn');
+
+    function cleanup() {
+      modal.style.display = 'none';
+      yesBtn.removeEventListener('click', onYes);
+      noBtn.removeEventListener('click', onNo);
+    }
+
+    function onYes() {
+      cleanup();
+      resolve(true);
+    }
+
+    function onNo() {
+      cleanup();
+      resolve(false);
+    }
+
+    yesBtn.addEventListener('click', onYes);
+    noBtn.addEventListener('click', onNo);
+  });
+}
+
+function saveHistory() {
+    const snapshot = {
+        states: JSON.parse(JSON.stringify(automaton.states)),
+        transitions: JSON.parse(JSON.stringify(automaton.transitions)),
+        alphabet: new Set(automaton.alphabet),
+    };
+    history = history.slice(0, historyIndex + 1);
+    history.push(snapshot);
+    historyIndex++;
+}
+
+document.getElementById('undo-btn').addEventListener('click', () => {
+    if (historyIndex > 0) {
+        historyIndex--;
+        const snapshot = history[historyIndex];
+        automaton.states = JSON.parse(JSON.stringify(snapshot.states));
+        automaton.transitions = JSON.parse(JSON.stringify(snapshot.transitions));
+        automaton.alphabet = new Set(snapshot.alphabet);
+    }
+});
+
+document.getElementById('reset-btn').addEventListener('click', () => {
+    automaton.states = [];
+    automaton.transitions = [];
+    automaton.alphabet = new Set();
+    history = [];
+    historyIndex = -1;
+});
+
+document.getElementById('vertex-btn').addEventListener('click', async () => {
+    const rect = canvas.getBoundingClientRect();
+    const x = rect.width / 2;
+    const y = rect.height / 2;
+
+    let label = prompt("Enter state label:");
+    if(!label) {
+        alert('Label cannot be empty');
+        return;
+    }
+    if(automaton.states.find(s => s.label === label)) {
+        alert('State label must be unique');
+        return;
+    }
+
+    let isStart = false;
+    if(automaton.states.length === 0) {
+        isStart = confirm('Make this the start state? (Only one start state allowed)');
+    }
+
+    let isAccept = await askAcceptState();
+
+    automaton.states.push({ x, y, label, isStart, isAccept });
+    saveHistory();
+    updateCheckboxes();
+});
+
+function updateCheckboxes() {
+    document.getElementById('deterministic').checked = true; 
+    document.getElementById('nondeterministic').checked = false; 
+    document.getElementById('epsilon').checked = false; 
+    document.getElementById('start-state').checked = automaton.states.some(s => s.isStart);
+    document.getElementById('accept-state').checked = automaton.states.some(s => s.isAccept);
+}
+</script>
 </body>
 </html>
