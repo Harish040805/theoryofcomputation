@@ -135,6 +135,7 @@ document.body.appendChild(iframe);
         <div class="button-container">
             <button id="vertex-btn" title="Add a new state">Vertex</button>
             <button id="edge-btn" title="Toggle transition (edge) mode">Edge</button>
+            <button id="self-loop-btn" title="Self Loop">Self Loop</button>
             <button id="undo-btn" title="Undo last action">Undo</button>
             <button id="reset-btn" title="Reset automaton">Reset</button>
             <button id="delete-btn" title="Delete state or transition">Delete</button>
@@ -171,6 +172,8 @@ let offsetY = 0;
 let isTransitionMode = false;
 let transitionFromState = null;
 
+let isSelfLoopMode = false;
+
 let history = [];
 let historyIndex = -1;
 
@@ -181,29 +184,42 @@ function drawAutomaton() {
         const from = trans.from;
         const to = trans.to;
 
-        ctx.beginPath();
-        ctx.moveTo(from.x, from.y);
-        ctx.lineTo(to.x, to.y);
-        ctx.strokeStyle = 'white';
-        ctx.lineWidth = 2;
-        ctx.stroke();
+        if (from === to) {
+            ctx.beginPath();
+            ctx.arc(from.x, from.y - 30, 20, 0, 2 * Math.PI);
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 2;
+            ctx.stroke();
 
-        let angle = Math.atan2(to.y - from.y, to.x - from.x);
-        let arrowSize = 10;
-        ctx.beginPath();
-        ctx.moveTo(to.x, to.y);
-        ctx.lineTo(to.x - arrowSize * Math.cos(angle - Math.PI / 6), to.y - arrowSize * Math.sin(angle - Math.PI / 6));
-        ctx.lineTo(to.x - arrowSize * Math.cos(angle + Math.PI / 6), to.y - arrowSize * Math.sin(angle + Math.PI / 6));
-        ctx.lineTo(to.x, to.y);
-        ctx.fillStyle = 'white';
-        ctx.fill();
+            ctx.fillStyle = 'red';
+            ctx.font = '16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(trans.symbols.join(','), from.x, from.y - 50);
+        } else {
+            ctx.beginPath();
+            ctx.moveTo(from.x, from.y);
+            ctx.lineTo(to.x, to.y);
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 2;
+            ctx.stroke();
 
-        const midX = (from.x + to.x) / 2;
-        const midY = (from.y + to.y) / 2;
-        ctx.fillStyle = 'red';
-        ctx.font = '16px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText(trans.symbols.join(','), midX, midY - 10);
+            let angle = Math.atan2(to.y - from.y, to.x - from.x);
+            let arrowSize = 10;
+            ctx.beginPath();
+            ctx.moveTo(to.x, to.y);
+            ctx.lineTo(to.x - arrowSize * Math.cos(angle - Math.PI / 6), to.y - arrowSize * Math.sin(angle - Math.PI / 6));
+            ctx.lineTo(to.x - arrowSize * Math.cos(angle + Math.PI / 6), to.y - arrowSize * Math.sin(angle + Math.PI / 6));
+            ctx.lineTo(to.x, to.y);
+            ctx.fillStyle = 'white';
+            ctx.fill();
+
+            const midX = (from.x + to.x) / 2;
+            const midY = (from.y + to.y) / 2;
+            ctx.fillStyle = 'red';
+            ctx.font = '16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(trans.symbols.join(','), midX, midY - 10);
+        }
     });
 
     automaton.states.forEach((state) => {
@@ -345,6 +361,39 @@ canvas.addEventListener('click', (e) => {
             transitionFromState = null;
         }
     }
+
+    if (isSelfLoopMode) {
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        let clickedState = null;
+        automaton.states.forEach((state) => {
+            if (Math.hypot(x - state.x, y - state.y) < 25) {
+                clickedState = state;
+            }
+        });
+
+        if (clickedState) {
+            let symbol = prompt('Enter input symbol(s) separated by comma:');
+            if(symbol) {
+                const symbols = symbol.split(',').map(s => s.trim());
+                const existingTransition = automaton.transitions.find(t => t.from === clickedState && t.to === clickedState);
+                if (existingTransition) {
+                    existingTransition.symbols.push(...symbols);
+                } else {
+                    automaton.transitions.push({
+                        from: clickedState,
+                        to: clickedState,
+                        symbols: symbols
+                    });
+                }
+                symbols.forEach(s => automaton.alphabet.add(s));
+                saveHistory();
+            }
+            isSelfLoopMode = false;
+        }
+    }
 });
 
 document.getElementById('edge-btn').addEventListener('click', () => {
@@ -352,6 +401,13 @@ document.getElementById('edge-btn').addEventListener('click', () => {
     transitionFromState = null;
     alert(isTransitionMode ? 'Transition Mode Enabled: Click source and destination states to add transition.' : 'Transition Mode Disabled');
     saveHistory();
+});
+
+document.getElementById('self-loop-btn').addEventListener('click', () => {
+    isSelfLoopMode = !isSelfLoopMode;
+    if (isSelfLoopMode) {
+        alert("Click the vertex to have self loop. This button works only once at a time. To have self loop for another vertex, click this button once again and click the next vertex.");
+    }
 });
 
 async function askAcceptState() {
