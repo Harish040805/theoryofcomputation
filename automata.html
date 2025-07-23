@@ -339,7 +339,6 @@ document.body.appendChild(iframe);
     </div>                
 </div>
 </center>
-
 <script>
 const notificationBox = document.querySelector('.notification');
 const notificationCloseButton = document.querySelector('.notification-close');
@@ -401,7 +400,7 @@ function drawAutomaton() {
         ctx.fillStyle = 'red';
         ctx.font = '16px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText(trans.symbol, midX, midY - 10);
+        ctx.fillText(trans.symbols.join(','), midX, midY - 10);
     });
 
     automaton.states.forEach((state) => {
@@ -524,27 +523,22 @@ canvas.addEventListener('click', (e) => {
         if (!transitionFromState) {
             if(clickedState) transitionFromState = clickedState;
         } else if(clickedState) {
-            let symbol = prompt('Enter input symbol (single character) (Leave empty and click ok for ε (Empty) transition:');
-if(symbol === '') {
-    symbol = 'ε';
-    automaton.transitions.push({
-        from: transitionFromState,
-        to: clickedState,
-        symbol: symbol
-    });
-    automaton.alphabet.add(symbol);
-    saveHistory();
-} else if(symbol && symbol.length === 1) {
-    automaton.transitions.push({
-        from: transitionFromState,
-        to: clickedState,
-        symbol: symbol
-    });
-    automaton.alphabet.add(symbol);
-    saveHistory();
-} else {
-    alert('Invalid symbol! Must be a single character or empty for epsilon.');
-}
+            let symbol = prompt('Enter input symbol(s) separated by comma:');
+            if(symbol) {
+                const symbols = symbol.split(',').map(s => s.trim());
+                const existingTransition = automaton.transitions.find(t => t.from === transitionFromState && t.to === clickedState);
+                if (existingTransition) {
+                    existingTransition.symbols.push(...symbols);
+                } else {
+                    automaton.transitions.push({
+                        from: transitionFromState,
+                        to: clickedState,
+                        symbols: symbols
+                    });
+                }
+                symbols.forEach(s => automaton.alphabet.add(s));
+                saveHistory();
+            }
             transitionFromState = null;
         }
     }
@@ -649,15 +643,6 @@ function updateCheckboxes() {
     document.getElementById('start-state').checked = automaton.states.some(s => s.isStart);
     document.getElementById('accept-state').checked = automaton.states.some(s => s.isAccept);
 }
-</script>
-    <script>
-document.getElementById('info-btn').addEventListener('click', () => {
-  document.getElementById('iframe-overlay').style.display = 'block';
-});
-
-document.getElementById('close-iframe-btn').addEventListener('click', () => {
-  document.getElementById('iframe-overlay').style.display = 'none';
-});
 </script>
 </body>
 </html>
