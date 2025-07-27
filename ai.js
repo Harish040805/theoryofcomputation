@@ -19,57 +19,77 @@ closeBtn.addEventListener("click", () => {
 
 function processInput(input) {
   const message = input.toLowerCase().trim();
-
   const greetings = ["hi", "hello", "helo", "hy", "hyy", "hii", "hey"];
-  const typeWords = ["types", "dfa", "nfa", "pushdown", "finite"];
+  const typeWords = ["types", "pushdown", "finite", "pda", "tm", "turing"];
+  const dfa = ["dfa", "deterministic"];
+  const nfa = ["nfa", "non-deterministic", "non deterministic"];
+  const pda = ["pda", "pushdown"];
+  const tm = ["tm", "turing", "turing machine"];
+  const lba = ["lba", "linear bounded"];
+  const input = userInput.value.trim();
   
-   let matchCount = 0;
-  if (greetings.some(word => new RegExp(`\\b${word}\\b`).test(message))) matchCount++;
-  if (message.includes("how") && message.includes("website")) matchCount++;
-  if (message.includes("website") && message.includes("about")) matchCount++;
-  if (typeWords.some(word => message.includes(word))) matchCount++;
-  if (message.includes("automata")) matchCount++;
-
-  if (matchCount > 1) {
-    return "Please ask one question at a time so I can give you a clear and helpful answer.";
+  if (!input) return;
+  if (message.includes("ask ai") && typeWords.some(word => message.includes(word))) {
+    return "Sure! You can ask the AI about topics like DFA, NFA, PDA, and other automata concepts.";
   }
   if (greetings.some(word => new RegExp(`\\b${word}\\b`).test(message))) {
     return "Hello! How can I help you today?";
   }
+
+ let response = "";
+
+  if (dfa.some(word => message.includes(word))) {
+    response += "🔹 **DFA (Deterministic Finite Automaton)**: Recognizes regular languages. It has exactly one transition for each symbol from a state.\n\n";
+  }
+  if (nfa.some(word => message.includes(word))) {
+    response += "🔹 **NFA (Non-deterministic Finite Automaton)**: Also recognizes regular languages. It can have multiple or no transitions for a symbol.\n\n";
+  }
+  if (pda.some(word => message.includes(word))) {
+    response += "🔹 **PDA (Pushdown Automaton)**: Recognizes context-free languages and uses a stack for memory.\n\n";
+  }
+  if (lba.some(word => message.includes(word))) {
+    response += "🔹 **LBA (Linear Bounded Automaton)**: Recognizes context-sensitive languages and works like a restricted Turing Machine.\n\n";
+  }
+  if (tm.some(word => message.includes(word))) {
+    response += "🔹 **TM (Turing Machine)**: The most powerful model, capable of simulating any computation. It recognizes recursively enumerable languages.\n\n";
+  }  
+  if (message.includes("types")) {
+    return "There are 4 major types of automata:\n\n1. DFA/NFA – Finite Automata\n2. PDA – Pushdown Automata\n3. LBA – Linear Bounded Automata\n4. TM – Turing Machines\n\nAsk about any one of them for a more detailed explanation!";
+  }
   if (message.includes("how") && message.includes("website")) {
-    return "To know how to use the website, please click the blue color information button that is placed on the top right corner of the webpage";
+    return "To know how to use the website, please click the blue color information button placed on the top right corner of the webpage.";
   }
   if (message.includes("website") && message.includes("about")) {
-    return "This website is about Automata Theory that is used in the concept of creating abstract machines. To know how to use the website, please click the blue color information button that is placed on the top right corner of the webpage";
+    return "This website is about Automata Theory and abstract machines. For usage instructions, click the blue info button on the top right corner.";
   }
-  if (typeWords.some(word => message.includes(word))) {
-    return "There are four main types of automata in automata theory:\n\n1. Finite Automata (FA) – used for recognizing regular languages. Includes:\n   - DFA (Deterministic Finite Automata)\n   - NFA (Nondeterministic Finite Automata)\n\n2. Pushdown Automata (PDA) – used for recognizing context-free languages. It uses a stack.\n\n3. Linear Bounded Automata (LBA) – used for context-sensitive languages. It’s a restricted form of a Turing Machine.\n\n4. Turing Machine (TM) – the most powerful model; used for recognizing recursively enumerable languages.\n\nEach type models increasing levels of computational power and is used in compilers, parsers, language design, and problem-solving in theoretical computer science.";
+  if (response === "" && typeWords.some(word => message.includes(word))) {
+    return "Here are the types of automata in automata theory:\n\n1. Finite Automata (FA) – recognizes regular languages (DFA/NFA)\n2. Pushdown Automata (PDA) – for context-free languages\n3. Linear Bounded Automata (LBA) – for context-sensitive languages\n4. Turing Machine (TM) – most powerful; handles all recursively enumerable languages.";
   }
   if (message.includes("automata")) {
-    return "Automata is a mathematical model for a machine with a finite number of states. It reads input symbols and changes states according to rules. It is the foundation of automata theory, which is used in designing compilers, text processing, and modeling of systems like traffic lights and vending machines.";
+    return "Automata is a model with states and transitions. It's foundational in compilers, parsers, and systems modeling.";
   }
   if (message.includes("fuck")) {
-    return "Fuck you to the core!";
+    return "Please use respectful language.";
   }
   if (["initial state", "final state", "state", "q0", "q1"].some(word => message.includes(word))) {
-	return "In this website, a state represents a node in the automaton graph. The initial state is where the automaton starts, and final states indicate accepting nodes.";
+    return "In this website, a state represents a node. The initial state is where the automaton starts; final states are accepting nodes.";
   }
   if (message.includes("data")) {
-	return "In this website, Data is the mode that allows us to give inputs for the automata simulation in the form of raw data.";
+    return "Data mode allows you to input raw data for simulating automata.";
   }
   if (message.includes("equation")) {
-	return "In this website, Equation mode lets you enter automata transitions and rules using mathematical or symbolic expressions.";
+    return "Equation mode lets you describe automata using symbolic expressions.";
   }
   if (message.includes("text")) {
-	return "In this website, Text mode allows you to input automata definitions or queries using plain text format.";
+    return "Text mode allows input of automata descriptions in plain text.";
   }
   if (message.includes("ask ai")) {
-	return "Use the 'Ask AI' feature to get automated help and explanations about automata and this website.";
+    return "Use the 'Ask AI' feature to get automated help and explanations about automata and this website.";
   }
-  if (["a", "b", "c", "d"].some(letter => message.includes(letter))) {
-	return "These are example input symbols (alphabet) you can use in automata simulations on this website.";
+  if ([" a ", " b ", " c ", " d "].some(letter => message.includes(letter))) {
+    return "These are sample input symbols you can use in the automata simulation.";
   }
-  return "Please ask only from the content (Automata Therory) as I am limited to the content";
+  return "Please ask only from the content (Automata Theory) as I am limited to the content.";
 }
 
 sendBtn.addEventListener("click", () => {
