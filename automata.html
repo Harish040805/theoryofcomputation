@@ -139,6 +139,15 @@ document.body.appendChild(iframe);
             <button id="undo-btn" title="Undo last action">Undo</button>
             <button id="reset-btn" title="Reset automaton">Reset</button>
             <button id="delete-btn" title="Delete state or transition">Delete</button>
+<button id="toggleChatBtn">Open AI Chat</button>
+<div id="chatContainer">
+  <button id="closeBtn">Close</button>
+  <h3>Simulated AI Chat (Specialized in Automata concepts)</h3>
+  <div id="chatLog">Hello! Ask me something.</div>
+  <input type="text" id="userInput" placeholder="Type your question here..." />
+  <button id="sendBtn">Send</button>
+</div>
+<script src="ai.js"></script>
         </div>
     </div>                
 </div>
