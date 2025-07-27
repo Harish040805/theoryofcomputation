@@ -5,12 +5,16 @@ const chatLog = document.getElementById("chatLog");
 const userInput = document.getElementById("userInput");
 const sendBtn = document.getElementById("sendBtn");
 
-// Close button hides the AI chat container
+toggleBtn.addEventListener("click", () => {
+  if (chatContainer.style.display === "none") {
+    chatContainer.style.display = "block";
+  } else {
+    chatContainer.style.display = "none";
+  }
+});
+
 closeBtn.addEventListener("click", () => {
   chatContainer.style.display = "none";
-  // Optionally, switch back to data mode on close
-  buttons.ai.style.backgroundColor = 'var(--main-red)';
-  activateMode('data');
 });
 
 function processInput(input) {
@@ -18,8 +22,8 @@ function processInput(input) {
 
   const greetings = ["hi", "hello", "helo", "hy", "hyy", "hii", "hey"];
   const typeWords = ["types", "dfa", "nfa", "pushdown", "finite"];
-
-  let matchCount = 0;
+  
+   let matchCount = 0;
   if (greetings.some(word => new RegExp(`\\b${word}\\b`).test(message))) matchCount++;
   if (message.includes("how") && message.includes("website")) matchCount++;
   if (message.includes("website") && message.includes("about")) matchCount++;
@@ -48,24 +52,24 @@ function processInput(input) {
     return "Fuck you to the core!";
   }
   if (["initial state", "final state", "state", "q0", "q1"].some(word => message.includes(word))) {
-    return "In this website, a state represents a node in the automaton graph. The initial state is where the automaton starts, and final states indicate accepting nodes.";
+	return "In this website, a state represents a node in the automaton graph. The initial state is where the automaton starts, and final states indicate accepting nodes.";
   }
   if (message.includes("data")) {
-    return "In this website, Data is the mode that allows us to give inputs for the automata simulation in the form of raw data.";
+	return "In this website, Data is the mode that allows us to give inputs for the automata simulation in the form of raw data.";
   }
   if (message.includes("equation")) {
-    return "In this website, Equation mode lets you enter automata transitions and rules using mathematical or symbolic expressions.";
+	return "In this website, Equation mode lets you enter automata transitions and rules using mathematical or symbolic expressions.";
   }
   if (message.includes("text")) {
-    return "In this website, Text mode allows you to input automata definitions or queries using plain text format.";
+	return "In this website, Text mode allows you to input automata definitions or queries using plain text format.";
   }
   if (message.includes("ask ai")) {
-    return "Use the 'Ask AI' feature to get automated help and explanations about automata and this website.";
+	return "Use the 'Ask AI' feature to get automated help and explanations about automata and this website.";
   }
   if (["a", "b", "c", "d"].some(letter => message.includes(letter))) {
-    return "These are example input symbols (alphabet) you can use in automata simulations on this website.";
+	return "These are example input symbols (alphabet) you can use in automata simulations on this website.";
   }
-  return "Please ask only from the content (Automata Theory) as I am limited to the content";
+  return "Please ask only from the content (Automata Therory) as I am limited to the content";
 }
 
 sendBtn.addEventListener("click", () => {
