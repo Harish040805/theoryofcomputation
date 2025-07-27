@@ -233,6 +233,7 @@ textarea {
       border: 1px solid #ccc;
       background: #fff;
       min-height: 100px;
+      color: black; 
     }
     input[type="text"] {
       width: 90%;
