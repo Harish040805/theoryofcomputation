@@ -139,15 +139,42 @@ document.body.appendChild(iframe);
             <button id="undo-btn" title="Undo last action">Undo</button>
             <button id="reset-btn" title="Reset automaton">Reset</button>
             <button id="delete-btn" title="Delete state or transition">Delete</button>
-<button id="toggleChatBtn">Open AI Chat</button>
-<div id="chatContainer">
-  <button id="closeBtn">Close</button>
-  <h3 style="color: #000">Simulated AI Chat (Specialized in Automata concepts)</h3>
-  <div id="chatLog" style="color: #000">Hello! Ask me something.</div>
-  <input type="text" id="userInput" style="color: #000" placeholder="Type your question here..." />
-  <button id="sendBtn">Send</button>
+<div class="p-4">
+    <textarea id="user-input" placeholder="Type your message here..."></textarea>
+    <button id="aisubmitbtn">Submit</button>
+    <div id="result"></div>
 </div>
-<script src="ai.js"></script>
+ <script>
+        const userInput = document.getElementById('user-input');
+        const aisubmitbtn = document.getElementById('aisubmitbtn');
+        const result = document.getElementById('result');
+
+        aisubmitbtn.addEventListener('click', async function () {
+            const val = userInput.value;
+
+            const response = await fetch(
+                "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyC5ab-HZmvtoTEXMRBMb4-tPpwD2yMVF1A",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: val }] }]
+                    })
+                }
+            );
+
+            const data = await response.json();
+            console.log(data);
+
+            if (data?.candidates?.length) {
+                result.innerHTML = `<p>${data.candidates[0].content.parts[0].text}</p>`;
+            } else {
+                result.innerHTML = "<p>Error: No response</p>";
+            }
+        });
+    </script>
         </div>
     </div>                
 </div>
@@ -514,3 +541,4 @@ function updateCheckboxes() {
 </script>
 </body>
 </html>
+
