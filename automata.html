@@ -1,544 +1,649 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Automata Simulator</title>
-    <link rel="stylesheet" href="automatacss.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Automata Simulator (AI integrated)</title>
+<link rel="stylesheets" href="automatacss.css">
 </head>
 <body>
-<script>
-const iframe = document.createElement('iframe');
-iframe.style.position = 'fixed';
-iframe.style.top = '0';
-iframe.style.left = '0';
-iframe.style.width = '100%';
-iframe.style.height = '100%';
-iframe.style.zIndex = '9999';
-iframe.style.border = 'none';
 
-const iframeContent = `
-  <html>
-    <head>
-      <style>
-        button {
-          padding: 10px 20px; 
-          border: 2px solid #ff6666; 
-          border-radius: 5px; 
-          background-color: #000; 
-          color: #ff6666; 
-          cursor: pointer;
-        }
-        button:hover {
-          background-color: #ff6666 ;
-          color: #000;
-        }
-      </style>
-    </head>
-    <body style="font-family: Arial, sans-serif; background-color: #000; text-align: center; margin-top: 20%;">
-      <h1 style="color: #fff;">Automata Simulator</h1>
-      <button onclick="parent.document.body.removeChild(parent.document.querySelector('iframe'));">Enter</button>
-    </body>
-  </html>
-`;
+  <button id="info-btn" class="info-btn" title="Info">i</button>
 
-iframe.srcdoc = iframeContent;
-document.body.appendChild(iframe);
-</script>
-<div id="notification" class="notification">
-  <div class="notification-message">
-    <div class="notification-title">Instructions</div>
-        * First, add states by clicking the "Vertex" button and labeling each state.<br>
-        * To add transitions between states, enable the "Edge" mode by clicking the Edge button.<br>
-        * In Edge mode, click on the source state then the destination state to create a transition.<br>
-        * Each transition requires an input symbol (single character) to label the edge.<br>
-        * Only one transition per symbol from a given state is allowed (DFA rule).<br>
-        * The "Undo" button reverts your last action.<br>
-        * The "Reset" button clears all states and transitions.<br>
-        * To simulate your automaton, click the "Solve" button and enter an input string.<br>
-        * The simulation will show if the input string is accepted or rejected based on final states.<br>
-        * Use the "Delete" button to remove states or transitions by clicking on them.<br>
-  </div>
-  <button class="notification-close">OK</button>
-</div>    
-  <button id="info-btn" title="Info">i</button>
-  <div id="iframe-overlay" style="display: none;">
-    <div id="iframe-wrapper">
-      <button id="close-iframe-btn" title="Close">×</button>
-      <iframe src="info.html"></iframe>
+  <h1>Automata Simulator — AI integrated</h1>
+
+  <div class="top-row">
+    <div id="canvas-wrapper">
+      <canvas id="canvas"></canvas>
+    </div>
+
+    <div class="controls">
+      <div id="notification">
+        <strong>Instructions</strong>
+        <div style="margin-top:6px; font-size:13px;">
+          • Click "Vertex" to add a state (label required).<br>
+          • Click "Edge" to toggle transition mode; click source then target to add transition.<br>
+          • Use "Self Loop" then click a state to add a self transition.<br>
+          • Use the chat box below to ask the AI to edit the graph (example commands below).<br>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button id="vertex-btn">Vertex</button>
+        <button id="edge-btn">Edge</button>
+        <button id="self-loop-btn">Self Loop</button>
+        <button id="undo-btn">Undo</button>
+        <button id="reset-btn">Reset</button>
+        <button id="delete-btn">Delete</button>
+      </div>
+
+      <div style="margin-top:6px;">
+        <label style="font-size:13px; color:#ccc;">AI Chat (try: "add state S at center", "make A final", "add transition A->B:0,1")</label>
+        <textarea id="user-input" placeholder='Describe changes to the automaton (e.g. "add state A at 100,200" or "add transition q0->q1:0")'></textarea>
+        <div style="display:flex; gap:8px; margin-top:6px;">
+          <button id="aisubmitbtn">Ask AI & Apply</button>
+          <button id="explain-btn">Ask AI for explanation (no changes)</button>
+        </div>
+        <div id="result" aria-live="polite"></div>
+      </div>
+
+      <div style="margin-top:10px;">
+        <table>
+          <tr><th>Feature</th><th>Present?</th></tr>
+          <tr><td>Deterministic Automaton (DFA)</td><td><input id="deterministic" type="checkbox" disabled></td></tr>
+          <tr><td>Non-deterministic (NFA)</td><td><input id="nondeterministic" type="checkbox" disabled></td></tr>
+          <tr><td>Has ε transitions</td><td><input id="epsilon" type="checkbox" disabled></td></tr>
+          <tr><td>Start state defined</td><td><input id="start-state" type="checkbox" disabled></td></tr>
+          <tr><td>Accept state(s) present</td><td><input id="accept-state" type="checkbox" disabled></td></tr>
+        </table>
+      </div>
     </div>
   </div>
-<div id="acceptModal">
-  <p>Is this a final state?</p>
-  <button id="yesBtn">Yes</button>
-  <button id="noBtn">No</button>
-</div>
 
-<center>
-<div class="container">
-    <div id="main-content" style="width: 100%; height: 100%; float: center;">
-        <h1>Automata Simulator</h1>
-        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-        <canvas id="canvas" width="1150" height="550"></canvas>
-        <table>
-                <tr>
-                    <th>Feature</th>
-                    <th>Present?</th>
-                </tr>
-<tr>
-    <td>Deterministic Automaton (DFA)</td>
-    <td>
-      <label class="custom-checkbox">
-        <input type="checkbox" id="deterministic" disabled />
-        <span class="checkmark"></span>
-      </label>
-    </td>
-  </tr>
-  <tr>
-    <td>Non-deterministic Automaton (NFA)</td>
-    <td>
-      <label class="custom-checkbox">
-        <input type="checkbox" id="nondeterministic" disabled />
-        <span class="checkmark"></span>
-      </label>
-    </td>
-  </tr>
-  <tr>
-    <td>Has Epsilon (ε) Transitions</td>
-    <td>
-      <label class="custom-checkbox">
-        <input type="checkbox" id="epsilon" disabled />
-        <span class="checkmark"></span>
-      </label>
-    </td>
-  </tr>
-  <tr>
-    <td>Start State Defined</td>
-    <td>
-      <label class="custom-checkbox">
-        <input type="checkbox" id="start-state" disabled />
-        <span class="checkmark"></span>
-      </label>
-    </td>
-  </tr>
-  <tr>
-    <td>Accept (Final) State(s) Present</td>
-    <td>
-      <label class="custom-checkbox">
-        <input type="checkbox" id="accept-state" disabled />
-        <span class="checkmark"></span>
-      </label>
-    </td>
-  </tr>
-            </table>
-        </div>
-        <div class="button-container">
-            <button id="vertex-btn" title="Add a new state">Vertex</button>
-            <button id="edge-btn" title="Toggle transition (edge) mode">Edge</button>
-            <button id="self-loop-btn" title="Self Loop">Self Loop</button>
-            <button id="undo-btn" title="Undo last action">Undo</button>
-            <button id="reset-btn" title="Reset automaton">Reset</button>
-            <button id="delete-btn" title="Delete state or transition">Delete</button>
-<div class="p-4">
-    <textarea id="user-input" placeholder="Type your message here..."></textarea>
-    <button id="aisubmitbtn">Submit</button>
-    <div id="result"></div>
-</div>
- <script>
-        const userInput = document.getElementById('user-input');
-        const aisubmitbtn = document.getElementById('aisubmitbtn');
-        const result = document.getElementById('result');
+  <!-- small modal used by "Vertex" -->
+  <div id="acceptModal">
+    <p>Is this a final (accept) state?</p>
+    <button id="yesBtn">Yes</button>
+    <button id="noBtn">No</button>
+  </div>
 
-        aisubmitbtn.addEventListener('click', async function () {
-            const val = userInput.value;
-
-            const response = await fetch(
-                "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyC5ab-HZmvtoTEXMRBMb4-tPpwD2yMVF1A",
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: val }] }]
-                    })
-                }
-            );
-
-            const data = await response.json();
-            console.log(data);
-
-            if (data?.candidates?.length) {
-                result.innerHTML = `<p>${data.candidates[0].content.parts[0].text}</p>`;
-            } else {
-                result.innerHTML = "<p>Error: No response</p>";
-            }
-        });
-    </script>
-        </div>
-    </div>                
-</div>
-</center>
 <script>
-const notificationBox = document.querySelector('.notification');
-const notificationCloseButton = document.querySelector('.notification-close');
+/* --------- CONFIG (replace key if needed) ---------- */
+const AI_API_KEY = "AIzaSyC5ab-HZmvtoTEXMRBMb4-tPpwD2yMVF1A"; // <-- user-supplied key (rotate for production)
+const AI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${AI_API_KEY}`;
 
-notificationBox.style.display = 'block';
-
-notificationCloseButton.addEventListener('click', () => {
-    notificationBox.classList.add('hide');
-    setTimeout(() => {
-        notificationBox.style.display = 'none';
-    }, 300);
-});
-
+/* ---------- Automaton data model ----------
+   states: [{ label, x, y, isStart, isAccept }]
+   transitions: [{ from, to, symbols: [] }] // from/to are labels (strings)
+   alphabet: Set of symbols
+------------------------------------------- */
 let automaton = {
-    states: [],          
-    transitions: [],     
-    alphabet: new Set(),
+  states: [],
+  transitions: [],
+  alphabet: new Set()
 };
 
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 
+function resizeCanvasToDisplaySize() {
+  const wrapper = document.getElementById('canvas-wrapper');
+  const style = getComputedStyle(wrapper);
+  const width = wrapper.clientWidth - 20;
+  // keep aspect / height decent
+  canvas.width = Math.max(600, Math.floor(width));
+  canvas.height = Math.max(420, Math.floor(Math.min(window.innerHeight * 0.6, 720)));
+}
+window.addEventListener('resize', resizeCanvasToDisplaySize);
+resizeCanvasToDisplaySize();
+
+/* ---- Interaction state ---- */
 let draggingState = null;
-let offsetX = 0;
-let offsetY = 0;
-
+let offsetX = 0, offsetY = 0;
 let isTransitionMode = false;
-let transitionFromState = null;
-
+let transitionFromLabel = null;
 let isSelfLoopMode = false;
-
 let history = [];
 let historyIndex = -1;
 
-function drawAutomaton() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    automaton.transitions.forEach((trans) => {
-        const from = trans.from;
-        const to = trans.to;
-
-        if (from === to) {
-            ctx.beginPath();
-            ctx.arc(from.x, from.y - 30, 20, 0, 2 * Math.PI);
-            ctx.strokeStyle = 'white';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-
-            ctx.fillStyle = 'red';
-            ctx.font = '16px Arial';
-            ctx.textAlign = 'center';
-            ctx.fillText(trans.symbols.join(','), from.x, from.y - 50);
-        } else {
-            ctx.beginPath();
-            ctx.moveTo(from.x, from.y);
-            ctx.lineTo(to.x, to.y);
-            ctx.strokeStyle = 'white';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-
-            let angle = Math.atan2(to.y - from.y, to.x - from.x);
-            let arrowSize = 10;
-            ctx.beginPath();
-            ctx.moveTo(to.x, to.y);
-            ctx.lineTo(to.x - arrowSize * Math.cos(angle - Math.PI / 6), to.y - arrowSize * Math.sin(angle - Math.PI / 6));
-            ctx.lineTo(to.x - arrowSize * Math.cos(angle + Math.PI / 6), to.y - arrowSize * Math.sin(angle + Math.PI / 6));
-            ctx.lineTo(to.x, to.y);
-            ctx.fillStyle = 'white';
-            ctx.fill();
-
-            const midX = (from.x + to.x) / 2;
-            const midY = (from.y + to.y) / 2;
-            ctx.fillStyle = 'red';
-            ctx.font = '16px Arial';
-            ctx.textAlign = 'center';
-            ctx.fillText(trans.symbols.join(','), midX, midY - 10);
-        }
-    });
-
-    automaton.states.forEach((state) => {
-        ctx.beginPath();
-        ctx.arc(state.x, state.y, 25, 0, 2 * Math.PI);
-        ctx.fillStyle = '#ff6666';
-        ctx.fill();
-
-        if (state.isAccept) {
-            ctx.lineWidth = 4;
-            ctx.strokeStyle = '#ffd700'; 
-            ctx.beginPath();
-            ctx.arc(state.x, state.y, 30, 0, 2 * Math.PI);
-            ctx.stroke();
-        } else {
-            ctx.lineWidth = 2;
-            ctx.strokeStyle = '#ff6666';
-            ctx.beginPath();
-            ctx.arc(state.x, state.y, 25, 0, 2 * Math.PI);
-            ctx.stroke();
-        }
-
-        if(state.isStart) {
-            ctx.beginPath();
-            ctx.moveTo(state.x - 40, state.y);
-            ctx.lineTo(state.x - 25, state.y);
-            ctx.strokeStyle = 'black';
-            ctx.lineWidth = 3;
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(state.x - 30, state.y - 7);
-            ctx.lineTo(state.x - 40, state.y);
-            ctx.lineTo(state.x - 30, state.y + 7);
-            ctx.fillStyle = 'white';
-            ctx.fill();
-        }
-
-        ctx.fillStyle = 'white';
-        ctx.font = '18px Arial';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(state.label, state.x, state.y);
-    });
+/* -------- Drawing -------- */
+function stateByLabel(label) {
+  return automaton.states.find(s => s.label === label);
 }
 
-setInterval(drawAutomaton, 100);
+function drawAutomaton() {
+  ctx.clearRect(0,0,canvas.width,canvas.height);
 
-canvas.addEventListener('mousedown', (e) => {
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+  // draw transitions (lines/arrows)
+  automaton.transitions.forEach(t => {
+    const from = stateByLabel(t.from);
+    const to = stateByLabel(t.to);
+    if (!from || !to) return;
 
-    automaton.states.forEach((state) => {
-        if (Math.hypot(x - state.x, y - state.y) < 25) {
-            draggingState = state;
-            offsetX = x - state.x;
-            offsetY = y - state.y;
-            // saveHistory();  // Commented out to avoid spamming history during drag
-        }
-    });
-});
+    if (from.label === to.label) {
+      // self loop
+      ctx.beginPath();
+      ctx.arc(from.x, from.y - 34, 20, 0, 2*Math.PI);
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
 
-canvas.addEventListener('mousemove', (e) => {
-    if (draggingState) {
-        const rect = canvas.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
+      ctx.fillStyle = '#ff6666';
+      ctx.font = '14px Arial'; ctx.textAlign='center';
+      ctx.fillText(t.symbols.join(','), from.x, from.y - 62);
+    } else {
+      ctx.beginPath();
+      ctx.moveTo(from.x, from.y);
+      ctx.lineTo(to.x, to.y);
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
 
-        draggingState.x = x - offsetX;
-        draggingState.y = y - offsetY;
+      // arrow
+      const angle = Math.atan2(to.y - from.y, to.x - from.x);
+      const arrowSize = 10;
+      ctx.beginPath();
+      ctx.moveTo(to.x, to.y);
+      ctx.lineTo(to.x - arrowSize * Math.cos(angle - Math.PI/6), to.y - arrowSize * Math.sin(angle - Math.PI/6));
+      ctx.lineTo(to.x - arrowSize * Math.cos(angle + Math.PI/6), to.y - arrowSize * Math.sin(angle + Math.PI/6));
+      ctx.closePath();
+      ctx.fillStyle = '#fff'; ctx.fill();
+
+      const midX = (from.x + to.x)/2;
+      const midY = (from.y + to.y)/2;
+      ctx.fillStyle = '#ff6666'; ctx.font='14px Arial'; ctx.textAlign='center';
+      ctx.fillText(t.symbols.join(','), midX, midY - 10);
+    }
+  });
+
+  // draw states
+  automaton.states.forEach(s => {
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, 25, 0, 2*Math.PI);
+    ctx.fillStyle = '#ff6666';
+    ctx.fill();
+
+    if (s.isAccept) {
+      ctx.lineWidth = 4; ctx.strokeStyle = '#ffd700';
+      ctx.beginPath(); ctx.arc(s.x, s.y, 30, 0, 2*Math.PI); ctx.stroke();
+    } else {
+      ctx.lineWidth = 2; ctx.strokeStyle = '#ff6666';
+      ctx.beginPath(); ctx.arc(s.x, s.y, 25, 0, 2*Math.PI); ctx.stroke();
     }
 
-    if (isTransitionMode && transitionFromState) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        drawAutomaton();
-
-        const rect = canvas.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-
-        ctx.beginPath();
-        ctx.moveTo(transitionFromState.x, transitionFromState.y);
-        ctx.lineTo(x, y);
-        ctx.strokeStyle = 'black';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-
-        let angle = Math.atan2(y - transitionFromState.y, x - transitionFromState.x);
-        let arrowSize = 10;
-        ctx.beginPath();
-        ctx.moveTo(x, y);
-        ctx.lineTo(x - arrowSize * Math.cos(angle - Math.PI / 6), y - arrowSize * Math.sin(angle - Math.PI / 6));
-        ctx.lineTo(x - arrowSize * Math.cos(angle + Math.PI / 6), y - arrowSize * Math.sin(angle + Math.PI / 6));
-        ctx.lineTo(x, y);
-        ctx.fillStyle = 'black';
-        ctx.fill();
-    }
-});
-
-canvas.addEventListener('mouseup', (e) => {
-    if(draggingState) {
-      saveHistory();  
-    }
-    draggingState = null;
-});
-
-canvas.addEventListener('click', (e) => {
-    if (isTransitionMode) {
-        const rect = canvas.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-
-        let clickedState = null;
-        automaton.states.forEach((state) => {
-            if (Math.hypot(x - state.x, y - state.y) < 25) {
-                clickedState = state;
-            }
-        });
-
-        if (!transitionFromState) {
-            if(clickedState) transitionFromState = clickedState;
-        } else if(clickedState) {
-            let symbol = prompt('Enter input symbol(s) separated by comma:');
-            if(symbol) {
-                const symbols = symbol.split(',').map(s => s.trim());
-                const existingTransition = automaton.transitions.find(t => t.from === transitionFromState && t.to === clickedState);
-                if (existingTransition) {
-                    existingTransition.symbols.push(...symbols);
-                } else {
-                    automaton.transitions.push({
-                        from: transitionFromState,
-                        to: clickedState,
-                        symbols: symbols
-                    });
-                }
-                symbols.forEach(s => automaton.alphabet.add(s));
-                saveHistory();
-            }
-            transitionFromState = null;
-        }
+    if (s.isStart) {
+      ctx.beginPath(); ctx.moveTo(s.x - 40, s.y); ctx.lineTo(s.x - 25, s.y); ctx.strokeStyle='black'; ctx.lineWidth=3; ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(s.x - 30, s.y - 7); ctx.lineTo(s.x - 40, s.y); ctx.lineTo(s.x - 30, s.y + 7); ctx.fillStyle='white'; ctx.fill();
     }
 
-    if (isSelfLoopMode) {
-        const rect = canvas.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-
-        let clickedState = null;
-        automaton.states.forEach((state) => {
-            if (Math.hypot(x - state.x, y - state.y) < 25) {
-                clickedState = state;
-            }
-        });
-
-        if (clickedState) {
-            let symbol = prompt('Enter input symbol(s) separated by comma:');
-            if(symbol) {
-                const symbols = symbol.split(',').map(s => s.trim());
-                const existingTransition = automaton.transitions.find(t => t.from === clickedState && t.to === clickedState);
-                if (existingTransition) {
-                    existingTransition.symbols.push(...symbols);
-                } else {
-                    automaton.transitions.push({
-                        from: clickedState,
-                        to: clickedState,
-                        symbols: symbols
-                    });
-                }
-                symbols.forEach(s => automaton.alphabet.add(s));
-                saveHistory();
-            }
-            isSelfLoopMode = false;
-        }
-    }
-});
-
-document.getElementById('edge-btn').addEventListener('click', () => {
-    isTransitionMode = !isTransitionMode;
-    transitionFromState = null;
-    alert(isTransitionMode ? 'Transition Mode Enabled: Click source and destination states to add transition.' : 'Transition Mode Disabled');
-    saveHistory();
-});
-
-document.getElementById('self-loop-btn').addEventListener('click', () => {
-    isSelfLoopMode = !isSelfLoopMode;
-    if (isSelfLoopMode) {
-        alert("Click the vertex to have self loop. This button works only once at a time. To have self loop for another vertex, click this button once again and click the next vertex.");
-    }
-});
-
-async function askAcceptState() {
-  return new Promise((resolve) => {
-    const modal = document.getElementById('acceptModal');
-    modal.style.display = 'block';
-
-    const yesBtn = document.getElementById('yesBtn');
-    const noBtn = document.getElementById('noBtn');
-
-    function cleanup() {
-      modal.style.display = 'none';
-      yesBtn.removeEventListener('click', onYes);
-      noBtn.removeEventListener('click', onNo);
-    }
-
-    function onYes() {
-      cleanup();
-      resolve(true);
-    }
-
-    function onNo() {
-      cleanup();
-      resolve(false);
-    }
-
-    yesBtn.addEventListener('click', onYes);
-    noBtn.addEventListener('click', onNo);
+    ctx.fillStyle = 'white'; ctx.font='16px Arial'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(s.label, s.x, s.y);
   });
 }
 
-function saveHistory() {
-    const snapshot = {
-        states: JSON.parse(JSON.stringify(automaton.states)),
-        transitions: JSON.parse(JSON.stringify(automaton.transitions)),
-        alphabet: new Set(automaton.alphabet),
-    };
-    history = history.slice(0, historyIndex + 1);
-    history.push(snapshot);
-    historyIndex++;
+setInterval(drawAutomaton, 80);
+
+/* ---------- Mouse interaction ---------- */
+function getMousePos(e) {
+  const rect = canvas.getBoundingClientRect();
+  return { x: e.clientX - rect.left, y: e.clientY - rect.top};
 }
 
-document.getElementById('undo-btn').addEventListener('click', () => {
-    if (historyIndex > 0) {
-        historyIndex--;
-        const snapshot = history[historyIndex];
-        automaton.states = JSON.parse(JSON.stringify(snapshot.states));
-        automaton.transitions = JSON.parse(JSON.stringify(snapshot.transitions));
-        automaton.alphabet = new Set(snapshot.alphabet);
+canvas.addEventListener('mousedown', (e) => {
+  const pos = getMousePos(e);
+  for (let s of automaton.states) {
+    if (Math.hypot(pos.x - s.x, pos.y - s.y) < 25) {
+      draggingState = s;
+      offsetX = pos.x - s.x; offsetY = pos.y - s.y;
+      break;
     }
+  }
+});
+canvas.addEventListener('mousemove', (e) => {
+  if (draggingState) {
+    const pos = getMousePos(e);
+    draggingState.x = pos.x - offsetX; draggingState.y = pos.y - offsetY;
+  }
+});
+canvas.addEventListener('mouseup', (e) => {
+  if (draggingState) saveHistory();
+  draggingState = null;
+});
+
+/* click actions for transition and self loops */
+canvas.addEventListener('click', (e) => {
+  const pos = getMousePos(e);
+  const clicked = automaton.states.find(s => Math.hypot(pos.x - s.x, pos.y - s.y) < 25);
+
+  if (isTransitionMode) {
+    if (!transitionFromLabel) {
+      if (clicked) {
+        transitionFromLabel = clicked.label;
+        showTemporaryMessage(`Selected source: ${transitionFromLabel}. Now click destination state.`);
+      }
+    } else {
+      if (clicked) {
+        let symbol = prompt('Enter input symbol(s) separated by comma:');
+        if (symbol) {
+          const symbols = symbol.split(',').map(s => s.trim()).filter(Boolean);
+          let existing = automaton.transitions.find(t => t.from === transitionFromLabel && t.to === clicked.label);
+          if (existing) existing.symbols.push(...symbols);
+          else automaton.transitions.push({ from: transitionFromLabel, to: clicked.label, symbols });
+          symbols.forEach(s => automaton.alphabet.add(s));
+          saveHistory();
+        }
+      }
+      transitionFromLabel = null;
+    }
+    return;
+  }
+
+  if (isSelfLoopMode && clicked) {
+    let symbol = prompt('Enter input symbol(s) separated by comma for self-loop:');
+    if (symbol) {
+      const symbols = symbol.split(',').map(s => s.trim()).filter(Boolean);
+      let existing = automaton.transitions.find(t => t.from === clicked.label && t.to === clicked.label);
+      if (existing) existing.symbols.push(...symbols);
+      else automaton.transitions.push({ from: clicked.label, to: clicked.label, symbols });
+      symbols.forEach(s => automaton.alphabet.add(s));
+      saveHistory();
+    }
+    isSelfLoopMode = false;
+    return;
+  }
+});
+
+/* ---------- Buttons ---------- */
+document.getElementById('edge-btn').addEventListener('click', () => {
+  isTransitionMode = !isTransitionMode;
+  transitionFromLabel = null;
+  alert(isTransitionMode ? 'Transition Mode ON (click source then dest)' : 'Transition Mode OFF');
+});
+
+document.getElementById('self-loop-btn').addEventListener('click', () => {
+  isSelfLoopMode = !isSelfLoopMode;
+  alert(isSelfLoopMode ? 'Self-loop mode ON: click a state to add self-loop.' : 'Self-loop mode OFF');
 });
 
 document.getElementById('reset-btn').addEventListener('click', () => {
-    automaton.states = [];
-    automaton.transitions = [];
-    automaton.alphabet = new Set();
-    history = [];
-    historyIndex = -1;
+  automaton.states = []; automaton.transitions = []; automaton.alphabet = new Set();
+  history = []; historyIndex = -1; updateCheckboxes(); saveHistory();
+});
+
+document.getElementById('undo-btn').addEventListener('click', () => {
+  if (historyIndex > 0) {
+    historyIndex--;
+    const snapshot = history[historyIndex];
+    automaton.states = JSON.parse(JSON.stringify(snapshot.states));
+    automaton.transitions = JSON.parse(JSON.stringify(snapshot.transitions));
+    automaton.alphabet = new Set(snapshot.alphabet);
+    updateCheckboxes();
+  } else {
+    alert('No more history.');
+  }
 });
 
 document.getElementById('vertex-btn').addEventListener('click', async () => {
-    const rect = canvas.getBoundingClientRect();
-    const x = rect.width / 2;
-    const y = rect.height / 2;
+  resizeCanvasToDisplaySize();
+  const rect = canvas.getBoundingClientRect();
+  const x = rect.width / 2;
+  const y = rect.height / 2;
 
-    let label = prompt("Enter state label:");
-    if(!label) {
-        alert('Label cannot be empty');
-        return;
-    }
-    if(automaton.states.find(s => s.label === label)) {
-        alert('State label must be unique');
-        return;
-    }
+  let label = prompt("Enter unique state label (e.g. q0, A):");
+  if (!label) return alert('Label required.');
+  if (automaton.states.some(s => s.label === label)) return alert('Label must be unique.');
 
-    let isStart = false;
-    if(automaton.states.length === 0) {
-        isStart = confirm('Make this the start state? (Only one start state allowed)');
-    }
-
-    let isAccept = await askAcceptState();
-
-    automaton.states.push({ x, y, label, isStart, isAccept });
-    saveHistory();
-    updateCheckboxes();
+  let isStart = false;
+  if (automaton.states.length === 0) {
+    isStart = confirm('Make this the start state? (only one allowed)');
+  }
+  // ask accept modal
+  const isAccept = await askAcceptState();
+  if (isStart) automaton.states.forEach(s => s.isStart = false);
+  automaton.states.push({ label, x: x, y: y, isStart, isAccept });
+  saveHistory(); updateCheckboxes();
 });
 
-function updateCheckboxes() {
-    document.getElementById('deterministic').checked = true; 
-    document.getElementById('nondeterministic').checked = false; 
-    document.getElementById('epsilon').checked = false; 
-    document.getElementById('start-state').checked = automaton.states.some(s => s.isStart);
-    document.getElementById('accept-state').checked = automaton.states.some(s => s.isAccept);
+/* delete: click element to delete */
+document.getElementById('delete-btn').addEventListener('click', () => {
+  alert('Click the state you want to delete on the canvas.');
+  const onClick = (e) => {
+    const pos = getMousePos(e);
+    const clickedIndex = automaton.states.findIndex(s => Math.hypot(pos.x - s.x, pos.y - s.y) < 25);
+    if (clickedIndex >= 0) {
+      const removed = automaton.states.splice(clickedIndex, 1)[0];
+      // remove transitions referencing label
+      automaton.transitions = automaton.transitions.filter(t => t.from !== removed.label && t.to !== removed.label);
+      saveHistory(); updateCheckboxes();
+    } else {
+      // maybe clicked on transition: delete nearest transition if close to its mid point
+      let found = null;
+      for (let i=0;i<automaton.transitions.length;i++) {
+        const t = automaton.transitions[i];
+        const from = stateByLabel(t.from);
+        const to = stateByLabel(t.to);
+        if (!from || !to) continue;
+        const midX = (from.x + to.x)/2, midY = (from.y + to.y)/2;
+        if (Math.hypot(pos.x - midX, pos.y - midY) < 20) { found = i; break; }
+      }
+      if (found !== null) {
+        automaton.transitions.splice(found,1); saveHistory();
+      } else alert('Nothing deleted (click nearer a state or transition).');
+    }
+    canvas.removeEventListener('click', onClick, true);
+  };
+  canvas.addEventListener('click', onClick, true);
+});
+
+/* ---------- History helpers ---------- */
+function saveHistory() {
+  const snapshot = {
+    states: JSON.parse(JSON.stringify(automaton.states)),
+    transitions: JSON.parse(JSON.stringify(automaton.transitions)),
+    alphabet: Array.from(automaton.alphabet)
+  };
+  history = history.slice(0, historyIndex + 1);
+  history.push(snapshot); historyIndex++;
 }
+
+/* accept modal helper */
+function askAcceptState() {
+  return new Promise((resolve) => {
+    const modal = document.getElementById('acceptModal');
+    modal.style.display = 'block';
+    const yes = document.getElementById('yesBtn'), no = document.getElementById('noBtn');
+    function cleanup(choice) {
+      modal.style.display = 'none';
+      yes.removeEventListener('click', onYes);
+      no.removeEventListener('click', onNo);
+      resolve(choice);
+    }
+    function onYes(){ cleanup(true); }
+    function onNo(){ cleanup(false); }
+    yes.addEventListener('click', onYes); no.addEventListener('click', onNo);
+  });
+}
+
+/* update small checkboxes */
+function updateCheckboxes() {
+  document.getElementById('deterministic').checked = true; // naive; you can improve detection
+  document.getElementById('nondeterministic').checked = false;
+  document.getElementById('epsilon').checked = automaton.transitions.some(t => t.symbols.includes('ε') || t.symbols.includes('epsilon'));
+  document.getElementById('start-state').checked = automaton.states.some(s => s.isStart);
+  document.getElementById('accept-state').checked = automaton.states.some(s => s.isAccept);
+}
+
+/* small helper to display messages */
+function showTemporaryMessage(msg, ms = 2200) {
+  const r = document.getElementById('result');
+  r.textContent = msg;
+  setTimeout(() => { r.textContent = ''; }, ms);
+}
+
+/* ---------- AI Integration ---------- */
+
+/*
+  Strategy:
+  1) We send the user instruction + current automaton (serialized) to the model with a system prompt that *requires*
+     returning JSON with an "actions" array. Each action is one of:
+     - add_state {label,x,y,isStart,isAccept}
+     - remove_state {label}
+     - add_transition {from,to,symbols:[]}
+     - remove_transition {from,to}
+     - set_start {label}
+     - set_accept {label, value:true/false}
+     - move_state {label, x, y}
+     - rename_state {oldLabel, newLabel}
+  2) We parse the returned JSON and execute actions.
+  3) If model doesn't return JSON, we display its text in result for user to copy/inspect.
+*/
+
+const aisubmitbtn = document.getElementById('aisubmitbtn');
+const explainBtn = document.getElementById('explain-btn');
+const userInputEl = document.getElementById('user-input');
+const resultEl = document.getElementById('result');
+
+function serializeAutomatonForPrompt() {
+  return {
+    states: automaton.states.map(s => ({ label:s.label, x: Math.round(s.x), y: Math.round(s.y), isStart:!!s.isStart, isAccept:!!s.isAccept })),
+    transitions: automaton.transitions.map(t => ({ from:t.from, to:t.to, symbols:t.symbols })),
+    alphabet: Array.from(automaton.alphabet)
+  };
+}
+
+async function callAI(promptText) {
+  const fullBody = {
+    // The request format follows the Google generative API example: use input as "content" parts.
+    // We're keeping request simple: pass user instruction as text. Model selection is in endpoint.
+    temperature: 0.2,
+    candidateCount: 1,
+    // Provide a single text input block
+    prompt: {
+      // We will give the model a short system+user style instruction via text field.
+      text: promptText
+    }
+  };
+
+  const resp = await fetch(AI_ENDPOINT, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(fullBody)
+  });
+
+  if (!resp.ok) {
+    const txt = await resp.text();
+    throw new Error(`AI API error: ${resp.status} ${txt}`);
+  }
+  const data = await resp.json();
+  // Try several access patterns to be robust:
+  // model may return candidates[0].content.parts[0].text or output[0].content[0].text etc.
+  let text = null;
+  if (data?.candidates && data.candidates.length && data.candidates[0].content) {
+    const parts = data.candidates[0].content;
+    // parts may be an array of {type:'output_text', text:'...'} or {parts:[ {text:...} ] }
+    if (Array.isArray(parts)) {
+      for (const p of parts) {
+        if (p?.text) { text = (text ? text + '\n' : '') + p.text; }
+        if (p?.parts && Array.isArray(p.parts)) {
+          for (const sub of p.parts) if (sub?.text) text = (text ? text + '\n' : '') + sub.text;
+        }
+      }
+    } else if (parts?.parts && Array.isArray(parts.parts)) {
+      text = parts.parts.map(pp => pp.text).join('\n');
+    }
+  }
+  if (!text && data?.output && Array.isArray(data.output)) {
+    text = data.output.map(o => o.content?.map(c => c.text).join('\n')).join('\n');
+  }
+  if (!text && typeof data?.text === 'string') text = data.text;
+
+  return { raw: data, text };
+}
+
+function applyActions(actions) {
+  let changed = false;
+  for (const act of actions) {
+    switch((act.type||'').toLowerCase()) {
+      case 'add_state': {
+        const lbl = act.label;
+        if (!lbl) break;
+        if (automaton.states.some(s=>s.label===lbl)) break;
+        const x = act.x ?? (canvas.width/2 + (Math.random()-0.5)*120);
+        const y = act.y ?? (canvas.height/2 + (Math.random()-0.5)*80);
+        if (act.isStart) automaton.states.forEach(s=>s.isStart=false);
+        automaton.states.push({ label: lbl, x, y, isStart:!!act.isStart, isAccept:!!act.isAccept });
+        changed=true; break;
+      }
+      case 'remove_state': {
+        const lbl = act.label;
+        if (!lbl) break;
+        automaton.states = automaton.states.filter(s => s.label !== lbl);
+        automaton.transitions = automaton.transitions.filter(t => t.from !== lbl && t.to !== lbl);
+        changed=true; break;
+      }
+      case 'add_transition': {
+        const from = act.from, to = act.to;
+        if (!from || !to) break;
+        const symbols = Array.isArray(act.symbols) ? act.symbols.map(s=>String(s)) : (act.symbols ? String(act.symbols).split(',').map(s=>s.trim()) : []);
+        let ex = automaton.transitions.find(t => t.from===from && t.to===to);
+        if (ex) ex.symbols.push(...symbols);
+        else automaton.transitions.push({ from, to, symbols });
+        symbols.forEach(s => automaton.alphabet.add(s));
+        changed=true; break;
+      }
+      case 'remove_transition': {
+        const from = act.from, to = act.to;
+        automaton.transitions = automaton.transitions.filter(t => !(t.from===from && t.to===to));
+        changed=true; break;
+      }
+      case 'set_start': {
+        const lbl = act.label;
+        if (!lbl) break;
+        automaton.states.forEach(s => s.isStart = (s.label === lbl));
+        changed=true; break;
+      }
+      case 'set_accept': {
+        const lbl = act.label; const val = !!act.value;
+        const s = automaton.states.find(x => x.label===lbl);
+        if (s) { s.isAccept = val; changed=true; }
+        break;
+      }
+      case 'move_state': {
+        const lbl = act.label; const s = automaton.states.find(x => x.label===lbl);
+        if (s) {
+          if (typeof act.x === 'number') s.x = act.x;
+          if (typeof act.y === 'number') s.y = act.y;
+          changed=true;
+        }
+        break;
+      }
+      case 'rename_state': {
+        const oldLabel = act.oldLabel, newLabel = act.newLabel;
+        if (!oldLabel || !newLabel) break;
+        if (automaton.states.some(s=>s.label===newLabel)) break; // avoid collision
+        const s = automaton.states.find(x => x.label===oldLabel);
+        if (s) { s.label = newLabel;
+          automaton.transitions.forEach(t => {
+            if (t.from===oldLabel) t.from = newLabel;
+            if (t.to===oldLabel) t.to = newLabel;
+          });
+          changed=true;
+        }
+        break;
+      }
+      default:
+        // unknown action - ignore
+        console.warn('Unknown action:', act);
+    }
+  }
+  if (changed) {
+    saveHistory();
+    updateCheckboxes();
+  }
+  return changed;
+}
+
+/* Build the instruction prompt for the model. We instruct it to respond with JSON only. */
+function buildPrompt(userText, automatonSnapshot, mode='apply') {
+  /* mode: 'apply' -> model should return JSON of actions to apply.
+     mode: 'explain' -> model may return text explanation (no actions).
+  */
+  const system = `You are an assistant that edits finite automata models. 
+You will be given the current automaton as JSON and a user's instruction. 
+When asked to make changes, STRICTLY return valid JSON (no extra commentary) in the EXACT format:
+{
+  "actions": [
+    { "type": "add_state", "label": "A", "x": 120, "y": 100, "isStart": false, "isAccept": false },
+    { "type": "add_transition", "from": "A", "to": "B", "symbols": ["0","1"] },
+    { "type": "set_start", "label": "A" },
+    { "type": "set_accept", "label": "B", "value": true },
+    { "type": "remove_state", "label": "X" },
+    { "type": "move_state", "label":"A", "x":200, "y":300 },
+    { "type": "rename_state", "oldLabel":"A","newLabel":"S" }
+  ]
+}
+If you cannot map the user's instruction to such actions, return {"error":"explanation text"} as JSON.
+If the user asked only to explain or ask questions, you may return a plain-text explanation in the "explain" mode.
+Do NOT include any other text or commentary when returning JSON.`;
+
+  const current = JSON.stringify(automatonSnapshot, null, 2);
+  const userPrompt = `Current automaton:\n${current}\n\nUser instruction:\n"""${userText}"""\n\nIf possible produce JSON with actions (see system instructions).`;
+  return system + "\n\n" + userPrompt;
+}
+
+/* handle click: send to AI and try to apply actions */
+async function handleAIRequest(userText, explainOnly=false) {
+  if (!userText || !userText.trim()) { resultEl.textContent = 'Please type an instruction.'; return; }
+  resultEl.textContent = 'Contacting AI…';
+
+  // prepare snapshot
+  const snapshot = serializeAutomatonForPrompt();
+  const fullPrompt = buildPrompt(userText, snapshot, explainOnly ? 'explain' : 'apply');
+
+  try {
+    const { raw, text } = await callAI(fullPrompt);
+    if (!text) {
+      resultEl.textContent = 'AI returned no text.';
+      console.log(raw);
+      return;
+    }
+
+    // if explainOnly: show text and exit
+    if (explainOnly) {
+      resultEl.textContent = text;
+      return;
+    }
+
+    // try to extract JSON from text. Models sometimes wrap JSON — find first "{" and last "}".
+    const first = text.indexOf('{');
+    const last = text.lastIndexOf('}');
+    if (first >=0 && last >=0 && last > first) {
+      const candidateJson = text.slice(first, last+1);
+      let parsed = null;
+      try {
+        parsed = JSON.parse(candidateJson);
+      } catch (err) {
+        // fallback: use raw text (display)
+        resultEl.textContent = 'AI returned non-parseable JSON. Showing raw response below:\n' + text;
+        return;
+      }
+      if (parsed.error) {
+        resultEl.textContent = 'AI says: ' + parsed.error;
+        return;
+      }
+      if (!Array.isArray(parsed.actions)) {
+        resultEl.textContent = 'AI returned JSON but no "actions" array was found. Raw response:\n' + text;
+        return;
+      }
+
+      const applied = applyActions(parsed.actions);
+      resultEl.textContent = applied ? 'Applied actions from AI.' : 'No changes were applied (actions may be no-ops).';
+      return;
+    } else {
+      resultEl.textContent = 'AI did not return JSON. Response:\n' + text;
+    }
+  } catch (err) {
+    console.error(err);
+    resultEl.textContent = 'Error calling AI: ' + String(err.message || err);
+  }
+}
+
+/* button hooks */
+aisubmitbtn.addEventListener('click', async () => {
+  const text = userInputEl.value;
+  await handleAIRequest(text, false);
+});
+
+explainBtn.addEventListener('click', async () => {
+  const text = userInputEl.value;
+  await handleAIRequest(text, true);
+});
+
+/* small info button behavior */
+document.getElementById('info-btn').addEventListener('click', () => {
+  alert('AI expects to return JSON with actions. Example user inputs: \n• add state S at 200,200\n• add transition q0->q1:0,1\n• make q1 final\n• set q2 start\n• delete state q3\n• move q0 to 120,240\nIf the AI returns JSON actions they will be applied automatically.');
+});
+
+/* initialize */
+saveHistory();
+updateCheckboxes();
+
 </script>
 </body>
 </html>
-
