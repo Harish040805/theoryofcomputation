@@ -584,6 +584,90 @@ document.getElementById('info-btn').addEventListener('click', () => {
 saveHistory();
 updateCheckboxes();
 
-</script>
+    const svg = d3.select("#graph");
+    const width = +svg.attr("width");
+    const height = +svg.attr("height");
+
+    let nodes = [];
+    let links = [];
+
+    const simulation = d3.forceSimulation(nodes)
+      .force("charge", d3.forceManyBody().strength(-200))
+      .force("center", d3.forceCenter(width / 2, height / 2))
+      .force("link", d3.forceLink(links).distance(150).id(d => d.id));
+
+    let nodeElements = svg.append("g").selectAll("circle");
+    let linkElements = svg.append("g").selectAll("line");
+
+    function updateGraph() {
+      // Links
+      linkElements = linkElements.data(links);
+      linkElements.exit().remove();
+      linkElements = linkElements.enter()
+        .append("line")
+        .attr("stroke", "#ff3b3b")
+        .attr("stroke-width", 2)
+        .merge(linkElements);
+
+      // Nodes
+      nodeElements = nodeElements.data(nodes, d => d.id);
+      nodeElements.exit().remove();
+      nodeElements = nodeElements.enter()
+        .append("circle")
+        .attr("r", 25)
+        .attr("fill", "#ff3b3b")
+        .call(d3.drag()
+          .on("start", dragstarted)
+          .on("drag", dragged)
+          .on("end", dragended))
+        .merge(nodeElements);
+
+      simulation.nodes(nodes).on("tick", ticked);
+      simulation.force("link").links(links);
+      simulation.alpha(1).restart();
+    }
+
+    function ticked() {
+      nodeElements.attr("cx", d => d.x).attr("cy", d => d.y);
+      linkElements
+        .attr("x1", d => d.source.x)
+        .attr("y1", d => d.source.y)
+        .attr("x2", d => d.target.x)
+        .attr("y2", d => d.target.y);
+    }
+
+    function dragstarted(event, d) {
+      if (!event.active) simulation.alphaTarget(0.3).restart();
+      d.fx = d.x;
+      d.fy = d.y;
+    }
+    function dragged(event, d) {
+      d.fx = event.x;
+      d.fy = event.y;
+    }
+    function dragended(event, d) {
+      if (!event.active) simulation.alphaTarget(0);
+      d.fx = d.x; // keep fixed after drag
+      d.fy = d.y;
+    }
+
+    // Button actions
+    let stateCounter = 0;
+    document.getElementById("addState").addEventListener("click", () => {
+      nodes.push({ id: "q" + stateCounter++ });
+      updateGraph();
+    });
+    document.getElementById("reset").addEventListener("click", () => {
+      nodes = [];
+      links = [];
+      stateCounter = 0;
+      updateGraph();
+    });
+
+    // Start with one state
+    nodes.push({ id: "q0" });
+    updateGraph();
+  </script>
 </body>
 </html>
+
