@@ -60,7 +60,6 @@
     </div>
   </div>
 
-  <!-- small modal used by "Vertex" -->
   <div id="acceptModal">
     <p>Is this a final (accept) state?</p>
     <button id="yesBtn">Yes</button>
@@ -68,15 +67,13 @@
   </div>
 
 <script>
-/* --------- CONFIG (replace key if needed) ---------- */
-const AI_API_KEY = "AIzaSyC5ab-HZmvtoTEXMRBMb4-tPpwD2yMVF1A"; // <-- user-supplied key (rotate for production)
+const AI_API_KEY = "AIzaSyC5ab-HZmvtoTEXMRBMb4-tPpwD2yMVF1A"; 
 const AI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${AI_API_KEY}`;
 
-/* ---------- Automaton data model ----------
    states: [{ label, x, y, isStart, isAccept }]
-   transitions: [{ from, to, symbols: [] }] // from/to are labels (strings)
+   transitions: [{ from, to, symbols: [] }] 
    alphabet: Set of symbols
-------------------------------------------- */
+  
 let automaton = {
   states: [],
   transitions: [],
@@ -90,14 +87,12 @@ function resizeCanvasToDisplaySize() {
   const wrapper = document.getElementById('canvas-wrapper');
   const style = getComputedStyle(wrapper);
   const width = wrapper.clientWidth - 20;
-  // keep aspect / height decent
   canvas.width = Math.max(600, Math.floor(width));
   canvas.height = Math.max(420, Math.floor(Math.min(window.innerHeight * 0.6, 720)));
 }
 window.addEventListener('resize', resizeCanvasToDisplaySize);
 resizeCanvasToDisplaySize();
 
-/* ---- Interaction state ---- */
 let draggingState = null;
 let offsetX = 0, offsetY = 0;
 let isTransitionMode = false;
@@ -106,7 +101,6 @@ let isSelfLoopMode = false;
 let history = [];
 let historyIndex = -1;
 
-/* -------- Drawing -------- */
 function stateByLabel(label) {
   return automaton.states.find(s => s.label === label);
 }
@@ -114,14 +108,12 @@ function stateByLabel(label) {
 function drawAutomaton() {
   ctx.clearRect(0,0,canvas.width,canvas.height);
 
-  // draw transitions (lines/arrows)
   automaton.transitions.forEach(t => {
     const from = stateByLabel(t.from);
     const to = stateByLabel(t.to);
     if (!from || !to) return;
 
     if (from.label === to.label) {
-      // self loop
       ctx.beginPath();
       ctx.arc(from.x, from.y - 34, 20, 0, 2*Math.PI);
       ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
@@ -135,7 +127,6 @@ function drawAutomaton() {
       ctx.lineTo(to.x, to.y);
       ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
 
-      // arrow
       const angle = Math.atan2(to.y - from.y, to.x - from.x);
       const arrowSize = 10;
       ctx.beginPath();
@@ -152,7 +143,6 @@ function drawAutomaton() {
     }
   });
 
-  // draw states
   automaton.states.forEach(s => {
     ctx.beginPath();
     ctx.arc(s.x, s.y, 25, 0, 2*Math.PI);
@@ -179,7 +169,6 @@ function drawAutomaton() {
 
 setInterval(drawAutomaton, 80);
 
-/* ---------- Mouse interaction ---------- */
 function getMousePos(e) {
   const rect = canvas.getBoundingClientRect();
   return { x: e.clientX - rect.left, y: e.clientY - rect.top};
@@ -206,7 +195,6 @@ canvas.addEventListener('mouseup', (e) => {
   draggingState = null;
 });
 
-/* click actions for transition and self loops */
 canvas.addEventListener('click', (e) => {
   const pos = getMousePos(e);
   const clicked = automaton.states.find(s => Math.hypot(pos.x - s.x, pos.y - s.y) < 25);
@@ -249,7 +237,6 @@ canvas.addEventListener('click', (e) => {
   }
 });
 
-/* ---------- Buttons ---------- */
 document.getElementById('edge-btn').addEventListener('click', () => {
   isTransitionMode = !isTransitionMode;
   transitionFromLabel = null;
@@ -293,14 +280,12 @@ document.getElementById('vertex-btn').addEventListener('click', async () => {
   if (automaton.states.length === 0) {
     isStart = confirm('Make this the start state? (only one allowed)');
   }
-  // ask accept modal
   const isAccept = await askAcceptState();
   if (isStart) automaton.states.forEach(s => s.isStart = false);
   automaton.states.push({ label, x: x, y: y, isStart, isAccept });
   saveHistory(); updateCheckboxes();
 });
 
-/* delete: click element to delete */
 document.getElementById('delete-btn').addEventListener('click', () => {
   alert('Click the state you want to delete on the canvas.');
   const onClick = (e) => {
@@ -308,11 +293,9 @@ document.getElementById('delete-btn').addEventListener('click', () => {
     const clickedIndex = automaton.states.findIndex(s => Math.hypot(pos.x - s.x, pos.y - s.y) < 25);
     if (clickedIndex >= 0) {
       const removed = automaton.states.splice(clickedIndex, 1)[0];
-      // remove transitions referencing label
       automaton.transitions = automaton.transitions.filter(t => t.from !== removed.label && t.to !== removed.label);
       saveHistory(); updateCheckboxes();
     } else {
-      // maybe clicked on transition: delete nearest transition if close to its mid point
       let found = null;
       for (let i=0;i<automaton.transitions.length;i++) {
         const t = automaton.transitions[i];
@@ -331,7 +314,6 @@ document.getElementById('delete-btn').addEventListener('click', () => {
   canvas.addEventListener('click', onClick, true);
 });
 
-/* ---------- History helpers ---------- */
 function saveHistory() {
   const snapshot = {
     states: JSON.parse(JSON.stringify(automaton.states)),
@@ -342,7 +324,6 @@ function saveHistory() {
   history.push(snapshot); historyIndex++;
 }
 
-/* accept modal helper */
 function askAcceptState() {
   return new Promise((resolve) => {
     const modal = document.getElementById('acceptModal');
@@ -360,40 +341,19 @@ function askAcceptState() {
   });
 }
 
-/* update small checkboxes */
 function updateCheckboxes() {
-  document.getElementById('deterministic').checked = true; // naive; you can improve detection
+  document.getElementById('deterministic').checked = true;
   document.getElementById('nondeterministic').checked = false;
   document.getElementById('epsilon').checked = automaton.transitions.some(t => t.symbols.includes('ε') || t.symbols.includes('epsilon'));
   document.getElementById('start-state').checked = automaton.states.some(s => s.isStart);
   document.getElementById('accept-state').checked = automaton.states.some(s => s.isAccept);
 }
 
-/* small helper to display messages */
 function showTemporaryMessage(msg, ms = 2200) {
   const r = document.getElementById('result');
   r.textContent = msg;
   setTimeout(() => { r.textContent = ''; }, ms);
 }
-
-/* ---------- AI Integration ---------- */
-
-/*
-  Strategy:
-  1) We send the user instruction + current automaton (serialized) to the model with a system prompt that *requires*
-     returning JSON with an "actions" array. Each action is one of:
-     - add_state {label,x,y,isStart,isAccept}
-     - remove_state {label}
-     - add_transition {from,to,symbols:[]}
-     - remove_transition {from,to}
-     - set_start {label}
-     - set_accept {label, value:true/false}
-     - move_state {label, x, y}
-     - rename_state {oldLabel, newLabel}
-  2) We parse the returned JSON and execute actions.
-  3) If model doesn't return JSON, we display its text in result for user to copy/inspect.
-*/
-
 const aisubmitbtn = document.getElementById('aisubmitbtn');
 const explainBtn = document.getElementById('explain-btn');
 const userInputEl = document.getElementById('user-input');
@@ -409,13 +369,9 @@ function serializeAutomatonForPrompt() {
 
 async function callAI(promptText) {
   const fullBody = {
-    // The request format follows the Google generative API example: use input as "content" parts.
-    // We're keeping request simple: pass user instruction as text. Model selection is in endpoint.
     temperature: 0.2,
     candidateCount: 1,
-    // Provide a single text input block
     prompt: {
-      // We will give the model a short system+user style instruction via text field.
       text: promptText
     }
   };
@@ -431,12 +387,9 @@ async function callAI(promptText) {
     throw new Error(`AI API error: ${resp.status} ${txt}`);
   }
   const data = await resp.json();
-  // Try several access patterns to be robust:
-  // model may return candidates[0].content.parts[0].text or output[0].content[0].text etc.
   let text = null;
   if (data?.candidates && data.candidates.length && data.candidates[0].content) {
     const parts = data.candidates[0].content;
-    // parts may be an array of {type:'output_text', text:'...'} or {parts:[ {text:...} ] }
     if (Array.isArray(parts)) {
       for (const p of parts) {
         if (p?.text) { text = (text ? text + '\n' : '') + p.text; }
@@ -528,7 +481,6 @@ function applyActions(actions) {
         break;
       }
       default:
-        // unknown action - ignore
         console.warn('Unknown action:', act);
     }
   }
@@ -539,11 +491,7 @@ function applyActions(actions) {
   return changed;
 }
 
-/* Build the instruction prompt for the model. We instruct it to respond with JSON only. */
 function buildPrompt(userText, automatonSnapshot, mode='apply') {
-  /* mode: 'apply' -> model should return JSON of actions to apply.
-     mode: 'explain' -> model may return text explanation (no actions).
-  */
   const system = `You are an assistant that edits finite automata models. 
 You will be given the current automaton as JSON and a user's instruction. 
 When asked to make changes, STRICTLY return valid JSON (no extra commentary) in the EXACT format:
@@ -567,12 +515,10 @@ Do NOT include any other text or commentary when returning JSON.`;
   return system + "\n\n" + userPrompt;
 }
 
-/* handle click: send to AI and try to apply actions */
 async function handleAIRequest(userText, explainOnly=false) {
   if (!userText || !userText.trim()) { resultEl.textContent = 'Please type an instruction.'; return; }
   resultEl.textContent = 'Contacting AI…';
 
-  // prepare snapshot
   const snapshot = serializeAutomatonForPrompt();
   const fullPrompt = buildPrompt(userText, snapshot, explainOnly ? 'explain' : 'apply');
 
@@ -584,13 +530,11 @@ async function handleAIRequest(userText, explainOnly=false) {
       return;
     }
 
-    // if explainOnly: show text and exit
     if (explainOnly) {
       resultEl.textContent = text;
       return;
     }
 
-    // try to extract JSON from text. Models sometimes wrap JSON — find first "{" and last "}".
     const first = text.indexOf('{');
     const last = text.lastIndexOf('}');
     if (first >=0 && last >=0 && last > first) {
@@ -599,7 +543,6 @@ async function handleAIRequest(userText, explainOnly=false) {
       try {
         parsed = JSON.parse(candidateJson);
       } catch (err) {
-        // fallback: use raw text (display)
         resultEl.textContent = 'AI returned non-parseable JSON. Showing raw response below:\n' + text;
         return;
       }
@@ -624,7 +567,6 @@ async function handleAIRequest(userText, explainOnly=false) {
   }
 }
 
-/* button hooks */
 aisubmitbtn.addEventListener('click', async () => {
   const text = userInputEl.value;
   await handleAIRequest(text, false);
@@ -635,16 +577,13 @@ explainBtn.addEventListener('click', async () => {
   await handleAIRequest(text, true);
 });
 
-/* small info button behavior */
 document.getElementById('info-btn').addEventListener('click', () => {
   alert('AI expects to return JSON with actions. Example user inputs: \n• add state S at 200,200\n• add transition q0->q1:0,1\n• make q1 final\n• set q2 start\n• delete state q3\n• move q0 to 120,240\nIf the AI returns JSON actions they will be applied automatically.');
 });
 
-/* initialize */
 saveHistory();
 updateCheckboxes();
 
 </script>
 </body>
 </html>
-
