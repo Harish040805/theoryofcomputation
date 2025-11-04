@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>About – Turing Machine Simulator</title>
+<style>
+body{
+  background-color:white;
+  color:#000;
+  font-family:Segoe UI,Arial,sans-serif;
+  margin:0;
+  padding:0;
+  line-height:1.7;
+}
+.container{
+  max-width:1500px;
+  margin:1px auto;
+  padding:30px;
+}
+h1,h2,h3{
+  color:#0044cc;
+}
+h1{
+  text-align:center;
+  margin-bottom:30px;
+}
+p{
+  margin-bottom:16px;
+}
+.section{
+  margin-bottom:40px;
+}
+strong{color:#0044cc;}
+ul{
+  margin-left:20px;
+}
+</style>
+</head>
+<body>
+<div class="container">
+<center><h2>Harish Creations</h2></center>
+<h1>Welcome to the Turing Machine Simulator Web App!</h1>
+<p>This interactive web application is designed to help users understand how a <strong>Turing Machine</strong> works. Even if you are new to the concept of automata theory, this site makes it easy to visualize how input strings are processed, how transitions occur, and how the machine reaches its final state step by step.</p>
+<div class="section">
+<h2>What Is a Turing Machine?</h2>
+<p>A <strong>Turing Machine</strong> is a theoretical model of computation proposed by Alan Turing. It consists of an infinite tape divided into cells, a tape head that can read and write symbols, and a finite set of states controlled by transition rules. It can move left, right, or stay on the same cell after each operation. By following its rules, a Turing Machine can perform any computation that a modern computer can theoretically do.</p>
+</div>
+
+<div class="section">
+<h2>Understanding the Interface</h2>
+
+<h3>1. Machine State Section</h3>
+<p>The top portion of the site displays the simulation output inside a white container titled <strong>“Machine State.”</strong> This is where the working of the Turing Machine is visualized in real time.</p>
+<ul>
+<li><strong>Current State (Blue Background):</strong> Shows the machine’s present state (e.g., q0, q1, etc.). It represents the internal control of the machine at a specific step.</li>
+<li><strong>Steps (Light Gray Background):</strong> Indicates the number of steps or transitions executed so far. Each step corresponds to reading a symbol, writing a new one, and moving the head in a particular direction.</li>
+<li><strong>Head Position (Red Background):</strong> Displays the position of the read/write head on the tape. The head moves left or right according to the transition rules.</li>
+</ul>
+
+<p>Below these indicators lies the <strong>Tape</strong>, which is a single row of 19 boxes representing the machine’s memory. Each box holds one symbol (usually <code>0</code> or <code>1</code>), and the <strong>red cell</strong> marks the current read/write head. In theory, the tape is infinite in both directions, but for visualization purposes, this simulator shows only a limited number of cells at a time.</p>
+
+<p>The tape is crucial because it stores both the input and any changes made by the Turing Machine during computation. As the machine executes transitions, the tape’s contents may change based on the defined rules.</p>
+
+<h3>2. Control Buttons</h3>
+<ul>
+<li><strong>Pause/Play (Blue Button):</strong> Starts or pauses the ongoing simulation. When played, the machine transitions through states automatically based on the defined rules.</li>
+<li><strong>Step (Green Button):</strong> Executes one transition at a time. This allows users to observe each movement and state change clearly.</li>
+<li><strong>Reset (Gray Button):</strong> Stops the current simulation and clears the machine to its initial configuration.</li>
+</ul>
+
+<p>In this simulator, the machine accepts binary inputs (symbols <strong>0</strong> and <strong>1</strong>). This is consistent with the concept of a binary Turing Machine, which operates on a two-symbol alphabet for simplicity. When you click <em>Play</em>, the machine processes the input from the beginning to the end according to your transition rules. The <em>Step</em> button, on the other hand, allows a slow and educational demonstration, moving the machine one transition at a time.</p>
+
+</div>
+
+<div class="section">
+<h2>Configuration Section</h2>
+<p>This section lets you define the initial conditions and behavior of your Turing Machine.</p>
+
+<ul>
+<li><strong>Input String (Initial Tape Content):</strong> This is where you enter the sequence of 0s and 1s that the machine will process. For example, entering <code>101</code> means the tape initially contains those three symbols. The head typically starts from a fixed central position (like cell 5 in this simulator) for clear visualization rather than theoretical necessity.</li>
+
+<li><strong>Halt State (Stop When Reached):</strong> This field defines the final or halting state. When the machine reaches this state, it stops execution. By default, it is set to <code>qh</code>, which stands for “halt.” You can edit this to match your transition design.</li>
+
+<li><strong>Speed (ms) (Lower = Faster):</strong> Controls how quickly the animation runs. A lower value makes the simulation faster, while a higher value slows it down. This setting affects user experience only and does not change the theoretical behavior of the machine.</li>
+</ul>
+
+<h3>Transition Rules (Define Machine Behavior)</h3>
+<p>This table is the heart of the Turing Machine. Each row defines a rule describing what the machine should do when it is in a certain state and reads a specific symbol.</p>
+
+<p>The table contains the following columns:</p>
+<ul>
+<li><strong>Current State:</strong> The machine’s present state before reading the symbol.</li>
+<li><strong>Read Symbol:</strong> The symbol currently under the head on the tape.</li>
+<li><strong>New State:</strong> The next state the machine should move into after executing this rule.</li>
+<li><strong>Write Symbol:</strong> The symbol to be written in place of the one currently on the tape.</li>
+<li><strong>Direction:</strong> Tells the head which direction to move next — <em>Right</em>, <em>Left</em>, or <em>Stay</em> (remain on the same cell).</li>
+<li><strong>Action:</strong> A delete button appears for each rule so you can remove specific transitions if needed.</li>
+</ul>
+
+<p>The <strong>+ Add Transition</strong> button below the table lets you create new transition rules dynamically. Each rule directly determines how the input is processed step by step during simulation.</p>
+</div>
+
+<div class="section">
+<h2>Execution History Section</h2>
+<p>The <strong>Execution History</strong> container records every step of the machine’s operation from start to finish. It lists the actions taken at each step in chronological order, for example:</p>
+
+<pre>
+Initial State: q0
+Step 1: Read '0', Write '0', Move R, New State: q0
+Step 2: Read '1', Write '1', Move L, New State: q0
+Step 3: Read '0', Write '0', Move R, New State: q0
+Step 4: Read '1', Write '1', Move L, New State: q0
+</pre>
+
+<p>This detailed log helps users trace how the Turing Machine transitions from one state to another, how the head moves, and how tape symbols are updated. It’s useful for understanding the logic behind each movement and confirming whether your transition rules are working correctly.</p>
+</div>
+
+<div class="section">
+<h2>How to Give Input and Interpret Results</h2>
+<p>To run a simulation, enter your binary input string (e.g., <code>101</code> or <code>0101101</code>) in the “Input String” field. The head starts from the central position for visualization (e.g., position 5). The number of steps depends on your transition rules. If your rules do not define a halting state or end condition, the simulation will continue indefinitely because the machine does not know when to stop — this is conceptually valid for Turing Machines that lack halting criteria.</p>
+
+<p>Therefore, the number of steps and final state depend entirely on how you define the transition rules and the halting condition. The simulator visually represents these theoretical behaviors to make them easy to understand.</p>
+</div>
+
+<div class="section">
+<h2>Some Interesting Inputs</h2>
+Here are some interesting inputs to give. With the below input, the turing machine acts like a counter that starts from 0 and moves till infinity.<br>
+<b>Input String</b>&nbsp;<b>&nbsp; &nbsp; &nbsp; &nbsp; Halt State</b>&nbsp;<b>&nbsp; &nbsp; &nbsp; &nbsp; Speed</b><br>
+<p>01 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; qh &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 1000 &nbsp;
+<table style="border-collapse: collapse; width: 100%; border: none; text-align: left;">
+  <tr>
+    <th>Current State</th>
+    <th>Read Symbol</th>
+    <th>New State</th>
+    <th>Write Symbol</th>
+    <th>Direction</th>
+  </tr>
+  <tr>
+    <td>q0</td>
+    <td>0</td>
+    <td>q0</td>
+    <td>0</td>
+    <td>Right</td>
+  </tr>
+  <tr>
+    <td>q0</td>
+    <td>1</td>
+    <td>q0</td>
+    <td>1</td>
+    <td>Left</td>
+  </tr>
+  <tr>
+    <td>q0</td>
+    <td>_</td>
+    <td>qh</td>
+    <td>_</td>
+    <td>Stay</td>
+  </tr>
+</table>
+
+
+<div class="section">
+<h2>Conclusion</h2>
+<p>The <strong>Turing Machine Simulator</strong> web app provides an educational way to understand the logic of computation. By experimenting with different inputs and transition rules, you can explore how simple binary operations form the foundation of modern computing theory. This simulator bridges the gap between abstract automata concepts and visual understanding, making Turing Machines accessible for everyone.</p>
+</div>
+</div>
+</body>
+</html>
